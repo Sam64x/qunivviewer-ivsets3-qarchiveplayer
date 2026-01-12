@@ -73,6 +73,10 @@ Rectangle
       id: eventsMaps
       name: 'settings.openMapFromEvents'
   }
+  IvVcliSetting {
+      id: new_arc_strip
+      name: 'archive.new_strip'
+  }
   QtObject {
       id: commonArchiveManager
 
@@ -125,6 +129,10 @@ Rectangle
   {
       root.m_resize();
       //cellCanvas.requestPaint("Component.onCompleted");
+  }
+  onIsRealtimeChanged:
+  {
+      root.refreshArchiveSources();
   }
   onIsSetsChanged:
   {
@@ -259,6 +267,43 @@ Timer
       {
           myGlobConnect.target = Qt.binding(function() {return root.globSignalsObject;});
           root.globSignalsObject.setsCompleted();
+      }
+  }
+  function archiveViewerQmlPath() {
+      if (new_arc_strip.value === "true") {
+          return "/qtplugins/iv/viewers/archiveplayer/IVArchivePlayerMin.qml";
+      }
+      return "/qtplugins/iv/viewers/archiveplayer/IVArchivePlayer.qml";
+  }
+  function refreshArchiveSources() {
+      for (var i = 0; i < root.zones.length; i++) {
+          if (root.zones[i] && root.zones[i].refreshEffectiveSource) {
+              root.zones[i].refreshEffectiveSource();
+          }
+      }
+  }
+  function handleViewerCommand(command, zoneItem) {
+      if (!root.globSignalsObject) {
+          return;
+      }
+      var sender = zoneItem && zoneItem.zoneObject ? zoneItem.zoneObject : zoneItem;
+      if (command === "viewers:fullscreen") {
+          root.globSignalsObject.command1(command, sender, {});
+          return;
+      }
+      if (command === "viewers:switch") {
+          if (root.isRealtime) {
+              root.globSignalsObject.setToArchive();
+          } else {
+              root.globSignalsObject.setToRealtime();
+          }
+          return;
+      }
+      if (command === "sets:area:removecamera2") {
+          var index = root.getCurrIndex(zoneItem);
+          if (index >= 0) {
+              root.globSignalsObject.zoneRemoved(index);
+          }
       }
   }
   onTvIrModeChanged:
@@ -2076,6 +2121,12 @@ Timer
          property string isKey2Exist: ""
          property var bindinCameras: []
          property int currentBindingIndex: -1
+         QtObject {
+             id: viewerCommandProxy
+             function command_to_viewer(command) {
+                 root.handleViewerCommand(command, selComp);
+             }
+         }
          onBindinCamerasChanged:
          {
              checkMulti();
@@ -2127,14 +2178,25 @@ Timer
 
          onQml_pathChanged:
          {
-             if(qml_path !=="")
-             {
-                 innerComponentLoader.source ="";
-                 innerComponentLoader.source =  'file:///' +applicationDirPath+"/"+qml_path;
+             refreshEffectiveSource();
+         }
+         function resolveQmlPath() {
+             if (!root.isRealtime
+                     && (selComp.type === "camera" || selComp.type === "detailcamera")
+                     && selComp.qml_path.indexOf("IVViewer.qml") !== -1) {
+                 return root.archiveViewerQmlPath();
              }
-             else
-             {
-                 innerComponentLoader.source ="";
+             return selComp.qml_path;
+         }
+         function refreshEffectiveSource() {
+             var resolvedPath = resolveQmlPath();
+             var nextSource = "";
+             if (resolvedPath !== "") {
+                 nextSource = 'file:///' + applicationDirPath + "/" + resolvedPath;
+             }
+             if (innerComponentLoader.source !== nextSource) {
+                 innerComponentLoader.source = "";
+                 innerComponentLoader.source = nextSource;
              }
          }
          onFocusChanged:
@@ -2302,15 +2364,7 @@ Timer
              asynchronous: true
              function refresh1()
              {
-                 innerComponentLoader.source = "";
-                 if(selComp.qml_path !=="")
-                 {
-                     innerComponentLoader.source =  'file:///' +applicationDirPath+"/"+qml_path;
-                 }
-                 else
-                 {
-                     innerComponentLoader.source ="";
-                 }
+                 refreshEffectiveSource();
              }
 //             QMapViewer {
 //                     id: qMapViewer
@@ -2345,10 +2399,14 @@ Timer
                        selComp.zoneObject.globSignalsObject = Qt.binding(function(){ return root.globSignalsObject});
                     }
 
-                    if(selComp.zoneObject.hasOwnProperty("globalComponent"))
-                    {
-                        selComp.zoneObject.globalComponent = Qt.binding(function(){ return commonArchiveManager});
-                    }
+                     if(selComp.zoneObject.hasOwnProperty("globalComponent"))
+                     {
+                         selComp.zoneObject.globalComponent = Qt.binding(function(){ return commonArchiveManager});
+                     }
+                     if(selComp.zoneObject.hasOwnProperty("viewer_command_obj"))
+                     {
+                         selComp.zoneObject.viewer_command_obj = viewerCommandProxy;
+                     }
 
                     if(selComp.zoneObject.hasOwnProperty("globalComponentObject"))
                     {
