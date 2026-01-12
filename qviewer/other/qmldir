@@ -1,0 +1,3 @@
+module iv.viewers.viewer
+plugin qviewer
+IVViewer 1.0 IVViewer.qml

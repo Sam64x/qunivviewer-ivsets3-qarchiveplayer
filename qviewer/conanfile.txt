@@ -1,0 +1,10 @@
+[requires]
+inc/[*]@iv/stable
+mem/[*]@m_work/stable
+stable/[*]@m_work/stable
+log/[*]@av/stable
+autoloader/[*]@ag/stable
+qwindows/[*]@ag/stable
+IVConanTools/[*]@iv/stable
+[generators]
+cmake

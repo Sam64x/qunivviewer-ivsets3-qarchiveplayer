@@ -1,0 +1,415 @@
+{
+	// Place your snippets for cpp here. Each snippet is defined under a snippet name and has a prefix, body and 
+	// description. The prefix is what is used to trigger the snippet and the body will be expanded and inserted. Possible variables are:
+	// $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders. Placeholders with the 
+	// same ids are connected.
+	// Example:
+	// "Print to console": {
+	// 	"prefix": "log",
+	// 	"body": [
+	// 		"console.log('$1');",
+	// 		"$2"
+	// 	],
+	// 	"description": "Log output to console"
+	// }
+	"Объявление mjson": {
+		"prefix": "ivs_mjson_func",
+		"body": [
+			"IVMJSONFUNC;"
+		],
+		"description": "Вставить объявление mjson func"
+	},
+	"Инициализация mjson": {
+		"prefix": "ivs_mjson_init",
+		"body": [
+			"IVMJSONINIT();"
+		],
+		"description": "Вставить инициализацию mjson func"
+	},
+	"Объявление IVCS": {
+		"prefix": "ivs_cs_header_func",
+		"body": [
+			"IVCSFUNC;"
+		],
+		"description": "Вставить обявление IVCS func"
+	},
+	"Инициализация IVCS": {
+		"prefix": "ivs_cs_header_init",
+		"body": [
+			"IVCSINIT(p);"
+		],
+		"description": "Вставить инициализацию IVCS func"
+	},
+	"Заголовник IVCS": {
+		"prefix": "ivs_cs_header",
+		"body": [
+			"#include <iv_cs.h>"
+		],
+		"description": "Вставить заголовник IVCS"
+	},
+	"Объявление критической секции IVCS": {
+		"prefix": "ivs_cs_declare",
+		"body": [
+			"IV_CRITICAL_SECTION ${0:_cs};"
+		],
+		"description": ""
+	},
+	"Инициализация критической секции IVCS": {
+		"prefix": "ivs_cs_init",
+		"body": [
+			"cs1Init(&${1:_cs},${2:700});"
+		],
+		"description": ""
+	},
+	"Вход в критическую секцию IVCS": {
+		"prefix": "ivs_cs_enter",
+		"body": [
+			"cs1Enter(&${1:_cs},${2:701});"
+		],
+		"description": ""
+	},
+	"Выход из критической секции IVCS": {
+		"prefix": "ivs_cs_leave",
+		"body": [
+			"cs1Leave(&${1:_cs});"
+		],
+		"description": ""
+	},
+	"Удаление критической секции IVCS": {
+		"prefix": "ivs_cs_delete",
+		"body": [
+			"cs1Delete(&${1:_cs});"
+		],
+		"description": ""
+	},
+	"Объявление IV_RWLOCK": {
+		"prefix": "ivs_rwlock_declare",
+		"body": [
+			"IV_RWLOCK ${1:_rwlock};"
+		],
+		"description": ""
+	},
+	"Инициализация IV_RWLOCK": {
+		"prefix": "ivs_rwlock_init",
+		"body": [
+			"IV_RWLOCKINIT(&${1:_rwlock});"
+		],
+		"description": ""
+	},
+	"Read Lock": {
+		"prefix": "ivs_rwlock_readlock",
+		"body": [
+			"iv_rwlock_rdlock(&${1:_rwlock},${2:702});"
+		],
+		"description": ""
+	},
+	"Read Unlock": {
+		"prefix": "ivs_rwlock_readunlock",
+		"body": [
+			"iv_rwlock_rdunlock(&${1:_rwlock})"
+		],
+		"description": ""
+	},
+	"Write Lock": {
+		"prefix": "ivs_rwlock_writelock",
+		"body": [
+			"iv_rwlock_wrlock(&${1:_rwlock},${2:703});"
+		],
+		"description": ""
+	},
+	"Write Unlock": {
+		"prefix": "ivs_rwlock_writeunlock",
+		"body": [
+			"iv_rwlock_wrunlock(&${0:_rwlock});"
+		],
+		"description": ""
+	},
+	"Stable Sleep": {
+		"prefix": "ivs_stable_sleep",
+		"body": [
+			"St2_SLEEP_St2(BOO_MODULE_METKA + ${1:704});"
+		],
+		"description": ""
+	},	
+	"Stable Label": {
+		"prefix": "ivs_stable_label",
+		"body": [
+			"St2(BOO_MODULE_METKA + ${1:705});"
+		],
+		"description": ""
+	},	
+	"Stable Func": {
+		"prefix": "ivs_stable_func",
+		"body": [
+			"St2_FUNCT_St2(BOO_MODULE_METKA + ${1:706});"
+		],
+		"description": ""
+	},
+	"Booldog Func": {
+		"prefix": "ivs_booldog_func",
+		"body": [
+			"IVBOO_FUNC2(${1:707});"
+		],
+		"description": ""
+	},
+	"Объявить booldog mixed allocator": {
+		"prefix": "ivs_booldog_mixed_allocator",
+		"body": [
+			"::booldog::allocators::single_threaded::mixed<1024> mixed(&::iv::booldog::heap);"
+		],
+		"description": ""
+	},
+	"Удаление IV_RWLOCK": {
+		"prefix": "ivs_rwlock_delete",
+		"body": [
+			"IV_RWLOCKDESTROY(&${0:_rwlock});"
+		],
+		"description": ""
+	},
+	"Заголовник mjson": {
+		"prefix": "ivs_mjson_header",
+		"body": [
+			"#include <iv_mjson.h>"
+		],
+		"description": "Вставить заголовник mjson"
+	},
+	"Разбор JSON с mjson": {
+		"prefix": "ivs_mjson_parse",
+		"body": [
+			"for(;;) {",
+			"  myajl_val ${0:myajl_parser} = mjson_parse(${1:js});",
+			"  if(!${0:myajl_parser}) {",
+			"    break;",
+			"  }",
+			"  mjson_free(${0:myajl_parser});",
+			"}"
+		],
+		"description": "Вставить разбор JSON с mjson"
+	},
+	"Поиск поля JSON с mjson": {
+		"prefix": "ivs_mjson_search",
+		"body": [
+			"myajl_val ${2:myajl_found} = NULL;",
+			"int ${0:myajl_parser}_count = ${0:myajl_parser}->size();",
+			"for(int ${0:myajl_parser}_index = 0;${0:myajl_parser}_index < ${0:myajl_parser}_count;++${0:myajl_parser}_index) {",
+			"  myajl_val myajl_temp = ${0:myajl_parser}->operator[](${0:myajl_parser}_index);",
+			"  if(myajl_temp->${3:IsString}() == 0) {",
+			"    continue;",
+			"  }",
+			"  if(strcmp(myajl_temp->GetKey(), \"${1:key2}\") == 0) {",
+			"    ${2:myajl_found} = myajl_temp;",
+			"    break;",
+			"  }",
+			"}"
+		],
+		"description": "Поиск поля JSON с mjson"
+	},
+	"Конвертация QString в const char*": {
+		"prefix": "ivs_qstring_to_const_char",
+		"body": [
+			"QByteArray ${1:qstring}_bytearray = ${1:qstring}.toUtf8();",
+			"const char* ${1:qstring}_utf8 = ${1:qstring}_bytearray.data();"
+		],
+		"description": "Конвертация QString в const char*"
+	},
+	"Конвертация mjson в JSON строку": {
+		"prefix": "ivs_mjson_to_json_string",
+		"body": [
+			"char* ${2:new_js} = mjson_generate(${1:myajl_parser}, myajl_gen_escape_solidus);"
+		],
+		"description": "Конвертация mjson в JSON строку"
+	},
+	"Освободить сгенерированную mjson JSON строку": {
+		"prefix": "ivs_mjson_string_free",
+		"body": [
+			"mjson_string_free(${2:new_js});"
+		],
+		"description": "Освободить сгенерированную mjson JSON строку"
+	},
+	"Объявить свойство Q_PROPERTY": {
+		"prefix": "ivs_qproperty_declaration",
+		"body": [
+			"private:",
+			"  Q_PROPERTY(${1:QString} ${2:prop} READ ${2:prop} WRITE set${3:Prop} NOTIFY ${2:prop}Changed)",
+			"  ${1:QString} _${2:prop};",
+			"public:",
+			"  ${1:QString} ${2:prop}() const;",
+			"  void set${3:Prop}(${1:QString} s);",
+			"  Q_SIGNAL void ${2:prop}Changed();"
+		],
+		"description": "Объявить свойство Q_PROPERTY"
+	},
+	"Реализовать свойство Q_PROPERTY": {
+		"prefix": "ivs_qproperty_definition",
+		"body": [
+			"${1:QString} ${4:QClass}::${2:prop}() const {",
+			"  return _${2:prop};",
+			"}",
+			"void ${4:QClass}::set${3:Prop}(${1:QString} s) {",
+			"  if(_${2:prop} != s) {",
+			"    _${2:prop} = s;",
+			"    Q_EMIT ${2:prop}Changed();",
+			"  }",
+			"}"
+		],
+		"description": "Реализовать свойство Q_PROPERTY"
+	},
+	"Реализовать библиотеку": {
+		"prefix": "ivs_library_cpp",
+		"body": [
+			"#define BOOMODULE_NOT_USE_RUX",
+			"#define BOOLDOG_WHO 80",
+			"#define BOO_MODULE_METKA ${1:main_struct}_BEGIN_METKA",
+			"",
+			"#ifdef HAVE_CONFIG_H",
+			"#include <config.h>",
+			"#endif",
+			"#ifndef BOOLDOG_NETWORK",
+			"#define BOOLDOG_NETWORK",
+			"#endif",
+			"#include <booldog/boo_mixed_allocator.h>",
+			"#include <iv_core3.h>",
+			"#include <iv_log2.h>",
+			"",
+			"#include <iv_version.h>",
+			"IVVERSION",
+			"",
+			"#include <iv_booldog.h>",
+			"IVBOOLDOG",
+			"",
+			"struct ${1:main_struct} {",
+			"  Log* _log;",
+			"  ${1:main_struct}() {",
+			"    IVBOO_FUNC2(1);",
+			"    ::booldog::allocators::single_threaded::mixed<1024> mixed(&::iv::booldog::heap);",
+			"    { _log = ::iv::log::init(\"${1:main_struct}\"); }",
+			"  }",
+			"  ~${1:main_struct}() {",
+			"    IVBOO_FUNC2(2);",
+			"    {}",
+			"  }",
+			"};",
+			"ivinternal ${1:main_struct}* p${1:main_struct} = NULL;",
+			"ivexport int dll_init(const param_t*) {",
+			"  p${1:main_struct} = ::iv::booldog::holder.create< ${1:main_struct} >(debuginfo_macros);",
+			"  return 0;",
+			"}",
+			"ivexport int pre_dll_init(const param_t* p) {",
+			"  IVBOOLDOGINIT(p);",
+			"  return 0;",
+			"}",
+			"ivexport int dll_exec(const param_t*) { return 0; }",
+			"ivexport int dll_free(void) {",
+			"  ::iv::booldog::holder.destroy(p${1:main_struct});",
+			"  return 0;",
+			"}"
+		],
+		"description": "Реализовать библиотеку"
+	},
+	"Реализовать test_package.h": {
+		"prefix": "ivs_test_package_h",
+		"body": [
+			"#ifndef TEST_PACKAGE_H",
+			"#define TEST_PACKAGE_H",
+			"#ifndef __STDC_LIMIT_MACROS",
+			"#define __STDC_LIMIT_MACROS",
+			"#endif",
+			"#ifndef __STDC_CONSTANT_MACROS",
+			"#define __STDC_CONSTANT_MACROS",
+			"#endif",
+			"#include <booldog/boo_console_utils.h>",
+			"#include <catch/catch.hpp>",
+			"#define IV_USE_IVAPPLICATION",
+			"#include <iv_easy_test.h>",
+			"#include <iv_stable.h>",
+			"#include <iv_mem2.h>",
+			"#include <iv_core3.h>",
+			"#ifndef IVGETMODULEFUNC_NOT_USE",
+			"IVMEMORYFUNC(81);",
+			"IVSTABLEFUNC(81);",
+			"#endif",
+			"#endif"
+		],
+		"description": "Реализовать test_package.h"
+	},
+	"Реализовать test_package.cpp": {
+		"prefix": "ivs_test_package_cpp",
+		"body": [
+			"#define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file",
+			"#include \"test_package.h\""
+		],
+		"description": "Реализовать test_package.cpp"
+	},
+	"Реализовать test_case.h": {
+		"prefix": "ivs_test_case_h",
+		"body": [
+			"#ifndef TEST_${1:CASE}_H",
+			"#define TEST_${1:CASE}_H",
+			"#define IVGETMODULEFUNC_NOT_USE",
+			"#include \"test_package.h\"",
+			"",
+			"class test_${1:CASE}: public iv_test_easy_app {",
+			"public:",
+			"  int test_index;",
+			"  test_${1:CASE}();",
+			"  virtual void setup_before_modules_load();",
+			"  virtual void setup();",
+			"  virtual void test();",
+			"  virtual void teardown();",
+			"  virtual void setup_variables();",
+			"};",
+			"#endif"
+		],
+		"description": "Реализовать test_case.h"
+	},
+	"Реализовать test_case.cpp": {
+		"prefix": "ivs_test_case_cpp",
+		"body": [
+			"#include \"test_${1:CASE}.h\"",
+			"",
+			"test_${1:CASE}::test_${1:CASE}() : test_index(0) {",
+			"  IVBOO_FUNC2(101);",
+			"  IVTEST_STATUS_INIT2;",
+			"  {",
+			"    setup_variables();",
+			"  }",
+			"}",
+			"void test_${1:CASE}::setup_before_modules_load() {",
+			"  IVBOO_FUNC2(102);",
+			"  IVTEST_STATUS_INIT2;",
+			"  {",
+			"    IVMEMORYINIT(NULL);",
+			"    IVSTABLEINIT(NULL);",
+			"    setup_variables();",
+			"  }",
+			"}",
+			"void test_${1:CASE}::setup() {",
+			"  IVBOO_FUNC2(103);",
+			"  IVTEST_STATUS_INIT2;",
+			"  {",
+			"  }",
+			"}",
+			"void test_${1:CASE}::test() {",
+			"  IVBOO_FUNC2(104);",
+			"  IVTEST_STATUS_INIT2;",
+			"  {",
+			"    REQUIRE(21 == 20);",
+			"  }",
+			"}",
+			"void test_${1:CASE}::teardown() {",
+			"  IVBOO_FUNC2(105);",
+			"  IVTEST_STATUS_INIT2;",
+			"  {",
+			"  }",
+			"}",
+			"void test_${1:CASE}::setup_variables() {",
+			"  IVBOO_FUNC2(106);",
+			"  IVTEST_STATUS_INIT2;",
+			"  {",
+			"  }",
+			"}",
+			"IVTEST_CASE(\"test ${1:CASE}\", test_${1:CASE});"
+		],
+		"description": "Реализовать test_case.cpp"
+	}
+}
