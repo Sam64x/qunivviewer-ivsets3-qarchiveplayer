@@ -81,7 +81,9 @@ RowLayout {
         archiveStreamer: root.archiveStreamer
     }
 
-    IVSeparator {}
+    IVSeparator {
+        visible: !root.isCommonSets
+    }
 
     FrameTimeButton {
         visible: !root.isCommonSets
@@ -90,8 +92,10 @@ RowLayout {
 
     EventButtons {
         id: iv_butt_spb_events_skip
+        visible: !root.isCommonSets
         iv_arc_slider_new: root.iv_arc_slider_new
         updateTimeFromSlider: root.updateTimeFromSlider
+        archiveStreamer: root.archiveStreamer
     }
 
     ScreenshotButton {

@@ -11,13 +11,10 @@ import QtQuick.Dialogs 1.2
 import iv.guicomponents 1.0
 import iv.calendar 1.0
 import iv.archivecomponents.selectinterval 1.0
-import iv.photocam 1.0
 import ArchiveComponents 1.0
 import QtQuick.Controls.Styles 1.4
 
 import iv.plugins.users 1.0
-import iv.exprogress 1.0
-import iv.export 1.0
 import iv.singletonLang 1.0
 
 import iv.colors 1.0
@@ -36,25 +33,6 @@ Item {
     readonly property bool commonArchiveStripVisible: __registeredCommonArchiveTarget
                                                      && __registeredCommonArchiveTarget.commonArchiveStrip
                                                      && __registeredCommonArchiveTarget.commonArchiveStrip.visible
-    property bool fullUiActive: root.isFullscreen || root.activeFocus || mainMouseArea.containsMouse
-
-    function overlayItem() {
-        return overlayLoader.item;
-    }
-
-    function controlPanelItem() {
-        return overlayItem() && overlayItem().wndControlPanel ? overlayItem().wndControlPanel : null;
-    }
-
-    function archiveControlsItem() {
-        var panel = controlPanelItem();
-        return panel && panel.archiveControls ? panel.archiveControls : null;
-    }
-
-    function timelineItem() {
-        var panel = controlPanelItem();
-        return panel && panel.iv_arc_slider_new ? panel.iv_arc_slider_new : null;
-    }
 
     function registerInCommonArchive(target) {
         if (!target || !target.registerArchivePlayerMin)
@@ -86,13 +64,17 @@ Item {
             registerInCommonArchive(globalComponent);
     }
 
+    function validateSettings(value){
+        try { JSON.parse(value) }
+        catch (e) { return null }
+        return JSON.parse(value)
+    }
+
     function funcSwitchSelectIntervalMode() {
         if (!root.exportEnabled)
             return;
         isIntervalMode = !isIntervalMode
-        var timeline = timelineItem();
-        if (timeline)
-            timeline.setInterval = isIntervalMode
+        iv_arc_slider_new.setInterval=isIntervalMode
     }
 
     function funcSwitchToFullScreen() {
@@ -132,21 +114,6 @@ Item {
     Component.onDestruction: unregisterFromCommonArchive()
 
 
-    function compare_events(a, b) {
-        if (a.event_time_begin > b.event_time_begin)
-            return 1
-        if (a.event_time_begin === b.event_time_begin)
-            return 0
-        if (a.event_time_begin < b.event_time_begin)
-            return -1
-    }
-
-    IvAccess {id: move_to_event; access: "{move_to_event}"}
-
-    IvAccess {id: move_to_bmark; access: "{move_to_bmark}"}
-
-    IvAccess {id: can_export_acc; access: "{upload_media_files}"}
-
     IvVcliSetting {
       id: vcliStretching
       name: 'cameras.stretching'
@@ -156,33 +123,6 @@ Item {
         id: stripScale
         name: 'archive.strip_scale'
     }
-
-    IvVcliSetting {
-        id: shortcutLastSequence1
-        name: 'keyboard.signals.' + root.Window.window.unique
-    }
-
-    IvVcliSetting {
-        id: export_save_directory
-        name: 'export_save_directory'
-    }
-
-    IvVcliSetting {
-        id: snapshot_save_directory
-        name: 'snapshot_save_directory'
-    }
-
-    IvVcliSetting {
-        id: wsPortVcli
-        name: 'ws_server_client.port'
-    }
-
-    IvVcliSetting {
-        id: iv_vcli_setting_arc
-        name: 'archive.common_panel'
-        onValueChanged: root.common_panel = iv_vcli_setting_arc.value === 'true'
-    }
-
 
     SoundSlider {
         id: soundSlider
@@ -219,22 +159,16 @@ Item {
         isNewStrip: true
 
         onFnJsonChanged: {
-            var timeline = timelineItem();
-            if (timeline)
-                timeline.updateFnJson();
+            iv_arc_slider_new.updateFnJson();
         }
 
         onEvJsonChanged: {
-            var timeline = timelineItem();
-            if (timeline)
-                timeline.updateEvJson();
+            iv_arc_slider_new.updateEvJson();
         }
 
         onDrawPreviewQML123: {
             if (status !== -1) {
-                var timeline = timelineItem();
-                if (timeline)
-                    timeline.setPreviewSource(url)
+                iv_arc_slider_new.setPreviewSource(url)
             }
         }
     }
@@ -262,102 +196,9 @@ Item {
 
     }
 
-    function componentCompleted() {
-        if (root.key2 === '' || root.key2 === null || root.key2 === undefined) {
-            return
-        }
-        m_i_started = 1
-
-        var i_id_group_lv = 0
-        if (false !== root.fromRealtime)
-            i_id_group_lv = 1
-
-        var s_time_iv_lv = ''
-        var b_is_ness_cont_work_lv = true
-        var controls = null
-        setMode904()
-        var i_is_this_common_panel_lv = 0
-        if (false === root.common_panel)
-            i_is_this_common_panel_lv = 0
-        else
-            i_is_this_common_panel_lv = 1
-
-        if (0 === root.getCamCommonPanelMode()) {
-            if (false === root.common_panel) {
-            }
-        }
-        if (false === root.common_panel) {
-            if (0 !== root.getCamCommonPanelModeUseSetPanel_Deb())
-                root.m_i_c_control_panel_height = 38
-        }
-
-        m_component_completed_2303 = true
-        if (is_export_media === 1) {
-            root.m_i_is_comleted = 1
-        }
-    }
-
-    function startPlugin() {
-        if (root.arc_vers > 0) {
-            if (0 !== m_i_is_comleted && 0 === m_i_started)
-                root.componentCompleted()
-        }
-        m_i_start_called = 1
-    }
-
-    function setMode904() {
-        var i_is_correct_parent_finded_lv = 0
-        var i_is_this_common_panel_lv = 0
-        if (false === root.common_panel)
-            i_is_this_common_panel_lv = 0
-        else {
-            i_is_this_common_panel_lv = 1
-        }
-        var b_is_ness_cont_work_lv = true
-        if (b_is_ness_cont_work_lv) {
-            if (root.is_export_media === 1) {
-                root.m_b_is_caused_by_unload = true
-            }
-            if (0 !== root.from_export_media) {
-                root.m_b_is_caused_by_unload = true
-            }
-            if (root.m_b_is_caused_by_unload) {
-                if ('keepAspectRatioExport' in render)
-                    render.keepAspectRatioExport = 1
-            }
-        }
-        var i_iv_vcli_setting_arc_lv = 0
-        if ('true' === iv_vcli_setting_arc.value)
-            i_iv_vcli_setting_arc_lv = 1
-        else
-            i_iv_vcli_setting_arc_lv = 0
-
-        var v_deb_window_1 = null
-        var controls = null
-
-        controls = root.Window.window.ivComponent.findByIvType('IVSETSAREA',
-                                                               true)
-        i_is_correct_parent_finded_lv = 1
-        var s_controls_lv = 'xxx'
-        s_controls_lv = controls
-        var s_controls2_lv = ''
-        var v_1_lv = false
-        var v_2_lv = false
-        v_1_lv = (null === s_controls2_lv)
-        v_2_lv = ('' === s_controls2_lv)
-        var v_11_lv = false
-        var v_21_lv = false
-        v_11_lv = (null == s_controls2_lv)
-        v_21_lv = ('' == s_controls2_lv)
-        var v_3_lv = false
-    }
-
     property string cameraId: root.key2 ? root.key2 : ""
-    property bool initCamera: false
     property string archiveId: "Quality"
-
     property bool exportEnabled: true
-
     property bool stretchImage: vcliStretching.value==="true"?true:false
 
     property real cameraAspectRatio: {
@@ -391,17 +232,10 @@ Item {
             var dt = Date.fromLocaleString(Qt.locale(), s, "dd.MM.yyyy hh:mm:ss.zzz")
             var dtPlus5 = new Date(dt.getTime() + 1500)
             _suppressTimeUpdates = true
-            var controls = archiveControlsItem();
-            var timeline = timelineItem();
-            if (!controls || !timeline) {
-                root.archiveTime = dt
-                _suppressTimeUpdates = false
-                return
-            }
-            controls.calendarButton.calendar.chosenDate = Qt.formatDate(dt, "dd.MM.yyyy")
-            controls.calendarButton.calendar.chosenTime = Qt.formatTime(dt, "hh:mm:ss")
+            archiveControls.calendarButton.calendar.chosenDate = Qt.formatDate(dt, "dd.MM.yyyy")
+            archiveControls.calendarButton.calendar.chosenTime = Qt.formatTime(dt, "hh:mm:ss")
             root.archiveTime = dt
-            timeline.currentDate = dt
+            iv_arc_slider_new.currentDate = dt
             _suppressTimeUpdates = false
         }
     }
@@ -425,20 +259,17 @@ Item {
     property int m_i_curr_scale: validateSettings(stripScale.value) !== null ? validateSettings(stripScale.value) : 4
 
     onM_i_curr_scaleChanged: {
-        var timeline = timelineItem();
-        if (timeline)
-            timeline.setScale(root.m_i_curr_scale)
+        if (iv_arc_slider_new) {
+            iv_arc_slider_new.setScale(root.m_i_curr_scale)
+        }
     }
 
     function updateTimeFromCalendar() {
         if (_suppressTimeUpdates) return
-        var controls = archiveControlsItem();
-        var timeline = timelineItem();
-        if (!controls || !timeline) return
-        var chosenDateTime = controls.calendarButton.calendar.chosenDate + " " + controls.calendarButton.calendar.chosenTime
+        var chosenDateTime = archiveControls.calendarButton.calendar.chosenDate + " " + archiveControls.calendarButton.calendar.chosenTime
         var time = Date.fromLocaleString(Qt.locale(), chosenDateTime, "dd.MM.yyyy hh:mm:ss")
         _suppressTimeUpdates = true
-        timeline.currentDate = time
+        iv_arc_slider_new.currentDate = time
         root.archiveTime = time
         _suppressTimeUpdates = false
 
@@ -452,13 +283,10 @@ Item {
 
     function updateTimeFromSlider() {
         if (_suppressTimeUpdates) return
-        var controls = archiveControlsItem();
-        var timeline = timelineItem();
-        if (!controls || !timeline) return
-        var time = timeline.currentDate
+        var time = iv_arc_slider_new.currentDate
         _suppressTimeUpdates = true
-        controls.calendarButton.calendar.chosenDate = Qt.formatDate(time, "dd.MM.yyyy")
-        controls.calendarButton.calendar.chosenTime = Qt.formatTime(time, "hh:mm:ss")
+        archiveControls.calendarButton.calendar.chosenDate = Qt.formatDate(time, "dd.MM.yyyy")
+        archiveControls.calendarButton.calendar.chosenTime = Qt.formatTime(time, "hh:mm:ss")
         root.archiveTime = time
         _suppressTimeUpdates = false
 
@@ -470,155 +298,26 @@ Item {
         }
     }
 
-    property string key2: ''
     Binding {
         target: appInfo
         property: "archiveKey2"
         value: root.key2
     }
-    property int print_image: 0
-    property string time: ''
-    property bool m_b_is_caused_by_unload: false
-    property bool common_panel: false
-    property int m_i_c_control_panel_height: 69
-    property int m_i_ness_all_switch_to_realtime: 0
-    property int m_i_ness_all_switch_to_realtime_prev: 0
-    property int m_i_select_interv_state: 0
-    property int c_I_IS_FIERST_SELECT_INTERV: 0
-    property int c_I_IS_SECOND_SELECT_INTERV: 1
-    property int c_I_IS_CORRECT_INTERV: 2
-    property int c_I_NOT_FOUND_907: 0
-    property int c_I_SUCCESS_907: 1
-    property int c_I_TIMEOUT_907: 2
-    property int c_I_ERROR_907: 3
-    property string m_s_tooltip_select_interv_1: Language.getTranslate("Select the first boundary of the interval and click",
-                                                                       "Выберите первую границу интервала и нажмите")
-    property int m_i_is_interval_corresp_event: 0
-    property int m_i_is_interval_corresp_event_bookmark: 0
-    property string m_s_exch_event_id: ''
-    property int m_i_current_timeout_request_to_events: 2000
-    property int m_i_marker_last_request_to_events: 0
 
-    property int c_I_ELEM_VERTIC_OFFSET_909: 3
-    property string end: ''
-    property string text_primit: ''
-
-    property bool m_b_image_corrector_created: false
-    property string trackFrameAfterImageCorrectorRoot: ''
-    property bool running: true
-
-    property int m_i_menu_height: 30
-    property bool m_b_no_actions: false
-    property bool fromRealtime: false
-    property bool m_isTestMode009: false
-    property int arc_vers: 0
-    property int m_i_started: 0
-    property int m_i_is_comleted: 0
-    property int m_i_start_called: 0
-    property int m_i_counter006: 0
-
-
-    property var m_primit: null
-    property var m_equal: null
-    property int from_export_media: 0
-    property var m_pane_sound: null
-    signal nessUpdateCalendarAP
-    signal setCurrTimeCommandAP
-
-    property int m_i_is_sound_created: 0
-    property int m_i_ness_activate_sound: 0
-    property int m_i_already_set_008: 0
-
-    property string m_s_is_video_present: ""
-
-    property string savedSetName: ""
-    property variant m_v_component_main_export: null
-
-    property string on_frame_profile: ''
+    property string key2: ''
     property string key3: ''
-    property bool possibility_switch_realtime: false
-    property bool draw_contures: false
-    property bool repeat: false
-    property real speed: 1000
 
-    property int m_i_210929_deb: 1000
-
-    property string cmd: 'stop'
-    property bool move: false
-    property bool mousedown: false
-    property bool mouseup: false
-    property bool b_slider_value_outside_change: false
-    property bool b_range_slider_value_outside_change: false
-    property bool b_range_slider_802_value_beg_outside_change: false
-    property bool b_range_slider_802_value_beg_outside_change_fierst: false
-    property bool b_range_slider_802_value_end_outside_change: false
-    property bool b_range_slider_802_value_end_outside_change_fierst: false
-    property bool b_input_time_outside_cahange: false
-    property int m_uu_i_ms_begin_interval: 0
-    property int m_uu_i_ms_end_interval: 0
-
-    property string m_s_start_event_id: ''
-
-    property int m_i_max_scale: 7
-    property int m_i_min_scale: 0
-    property string time811: ''
-    property int m_i_width_visible_bound5: 200
-    property int m_i_width_visible_bound4: 350
-    property int smallSizePanel: 520
-    property int normalSizePanel: 720
-    property bool m_b_is_by_events: false
-    property real m_rl_min_scale: 0.0
-    property bool m_b_ness_pass_params: false
-    property string guid: ""
-
-    property string m_s_key3_audio_ap: ''
-    property string m_s_track_source_univ_ap: ''
-
-    property int m_i_is_ness_switch_to_realtime_common_panel: 0
-    property int m_i_is_ness_switch_to_realtime_common_panel_prev: 0
-
-    property bool small_mode_panel_ppUp: false
-    property int speed_ch_box_rec_size: 33
-    property bool ppUpRowLayoutFillState: false
-    property int m_i_event_not_found_visible_counter: 0
-    property string m_s_tooltip_select_interv_2: Language.getTranslate("Change interval boundary and other interval operations",
-                                                                       "Изменить границу интервала и другие операции с интервалом")
     property variant viewer_command_obj: null
-    property var export_avi_object: null
     property int is_export_media: 0
     property bool isFullscreen: false
     property bool isIntervalMode: false
 
-    property string m_s_selected_sna_ip: ""
-    property string m_s_selected_zna_ip_output: ""
-    property string shortcutExportAviArchive: ''
-    property bool debug_mode: debugVcli !== null && debugVcli !== undefined ? debugVcli.value === "true" ? true : false : false
-
-    property bool m_b_ke2_changed_2303: false
-    property bool m_component_completed_2303: false
-    property bool m_b_complete_2303_fierst_time: true
+    property int m_uu_i_ms_begin_interval: 0
+    property int m_uu_i_ms_end_interval: 0
 
     property var cache_preview: []
-
-    property bool first_init: true
-    property bool calendar_date_change: false
-    property bool calendar_time_change: false
     property bool is_multiscreen: false
-    property bool prev_condition_is_fullscreen: false
-
-    property real isize: interfaceSize.value !== "" ? parseFloat(interfaceSize.value) : 1
-
-    property string hoveredColor: "#55FFFFFF"
-    property string attentionHovColor: "#88FF0000"
-    property string pressedColor: "#55000000"
-    property string chkdColor: "#44000000"
-
-    property string buttonColorPressed: "#f0f0f0"
-    property string buttonColor: "#f3f3f3"
-    property string buttonBorderColorPressed: "#808080"
-    property string buttonBorderColor: "#303030"
-
-    property bool fast_edits: fastEdits.value === 'true' ? true : false
+    property bool prev_condition_is_fullscreen
 
     onIsFullscreenChanged: {
         if (root.prev_condition_is_fullscreen === false && root.isFullscreen === true) {
@@ -965,222 +664,161 @@ Item {
         }
 
 
-        Loader {
-            id: overlayLoader
+        IVButtonTopPanel {
+            id: ivButtonTopPanel
+            anchors.top: parent.top
+            mouseOnPane: mainMouseArea.containsMouse
+            parentComponent: root
+        }
+
+        Item {
+            id: wndControlPanel
+            z: 5
             anchors.fill: parent
-            sourceComponent: root.fullUiActive ? fullOverlayComponent : thinOverlayComponent
-        }
 
-        Component {
-            id: thinOverlayComponent
+            ColumnLayout {
+                id: cameraInfoBlock
 
-            Item { }
-        }
+                readonly property bool isTopRight: (archiveControls.settingButtons.posAlignment & (Qt.AlignTop | Qt.AlignRight)) === (Qt.AlignTop | Qt.AlignRight)
 
-        Component {
-            id: fullOverlayComponent
+                z: mainMouseArea.z + 1
 
-            Item {
-                id: fullOverlay
-                property alias wndControlPanel: wndControlPanel
+                anchors.fill: parent
+                anchors.margins: 2
+                anchors.bottomMargin: wndControlPanel.visible ? iv_arc_slider_new.height : 0
+                anchors.topMargin: (_archiveMarker.visible && isTopRight) ? 24 : 0
 
-                IVButtonTopPanel {
-                    id: ivButtonTopPanel
-                    anchors.top: parent.top
-                    mouseOnPane: mainMouseArea.containsMouse
-                    parentComponent: root
-                }
+                ColumnLayout {
+                    Layout.alignment: archiveControls.settingButtons.posAlignment
+                    spacing: 0
 
-                Item {
-                    id: wndControlPanel
-                    z: 5
-                    anchors.fill: parent
-                    visible: !root.commonArchiveStripVisible
-                    opacity: ((0 === root.getCamCommonPanelModeUseSetPanel_Deb() && !root.isSmallMode())
-                              || mainMouseArea.containsMouse || root.common_panel) ? 1.0 : 0.0
+                    Label {
+                        text: root.cameraId
+                        Layout.alignment: archiveControls.settingButtons.posAlignment
+                        font: IVColors.getFont("Label accent")
+                        color: IVColors.get("Colors/Text new/TxContrast")
+                        leftPadding: 4
+                        rightPadding: 4
+                        background: Rectangle {
+                            visible: parent.text.length > 0
+                            color: IVColors.get("Colors/Background new/BgFormOverVideo")
+                        }
+                    }
 
-                    property var archiveControls: archiveControlsLoader.item
-                    property var iv_arc_slider_new: timelineLoader.item
+                    RowLayout {
+                        spacing: 0
+                        Layout.alignment: archiveControls.settingButtons.posAlignment
 
-                    readonly property int controlsAlignment: archiveControls
-                                                         ? archiveControls.settingButtons.posAlignment
-                                                         : (Qt.AlignTop | Qt.AlignLeft)
-
-                    ColumnLayout {
-                        id: cameraInfoBlock
-
-                        readonly property bool isTopRight: (controlsAlignment & (Qt.AlignTop | Qt.AlignRight)) === (Qt.AlignTop | Qt.AlignRight)
-
-                        z: mainMouseArea.z + 1
-
-                        anchors.fill: parent
-                        anchors.margins: 2
-                        anchors.bottomMargin: wndControlPanel.visible
-                                              ? (iv_arc_slider_new ? iv_arc_slider_new.height : 0)
-                                              : 0
-                        anchors.topMargin: (_archiveMarker.visible && isTopRight) ? 24 : 0
-
-                        ColumnLayout {
-                            Layout.alignment: controlsAlignment
-                            spacing: 0
-
-                            Label {
-                                text: root.cameraId
-                                Layout.alignment: controlsAlignment
-                                font: IVColors.getFont("Label accent")
-                                color: IVColors.get("Colors/Text new/TxContrast")
-                                leftPadding: 4
-                                rightPadding: 4
-                                background: Rectangle {
-                                    visible: parent.text.length > 0
-                                    color: IVColors.get("Colors/Background new/BgFormOverVideo")
-                                }
+                        Label {
+                            text: archiveStreamer.currentDate || ""
+                            Layout.alignment: archiveControls.settingButtons.posAlignment
+                            font: IVColors.getFont("Label accent")
+                            leftPadding: 4
+                            rightPadding: 4
+                            color: IVColors.get("Colors/Text new/TxContrast")
+                            background: Rectangle {
+                                visible: parent.text.length > 0
+                                color: IVColors.get("Colors/Background new/BgFormOverVideo")
                             }
-
-                            RowLayout {
-                                spacing: 0
-                                Layout.alignment: controlsAlignment
-
-                                Label {
-                                    text: archiveStreamer.currentDate || ""
-                                    Layout.alignment: controlsAlignment
-                                    font: IVColors.getFont("Label accent")
-                                    leftPadding: 4
-                                    rightPadding: 4
-                                    color: IVColors.get("Colors/Text new/TxContrast")
-                                    background: Rectangle {
-                                        visible: parent.text.length > 0
-                                        color: IVColors.get("Colors/Background new/BgFormOverVideo")
-                                    }
-                                }
-                                Label {
-                                    text: archiveStreamer.currentTime || ""
-                                    Layout.alignment: controlsAlignment
-                                    font: IVColors.getFont("Label accent")
-                                    leftPadding: 4
-                                    rightPadding: 4
-                                    color: IVColors.get("Colors/Text new/TxContrast")
-                                    background: Rectangle {
-                                        visible: parent.text.length > 0
-                                        color: IVColors.get("Colors/Background new/BgFormOverVideo")
-                                    }
-                                }
-                            }
-
-                            RowLayout {
-                                spacing: 0
-                                Layout.alignment: controlsAlignment
-
-                                Label {
-                                    text: archiveStreamer.cameraResolution || ""
-                                    Layout.alignment: controlsAlignment
-                                    font: IVColors.getFont("Label accent")
-                                    leftPadding: 4
-                                    rightPadding: 4
-                                    color: IVColors.get("Colors/Text new/TxContrast")
-                                    background: Rectangle {
-                                        visible: parent.text.length > 0
-                                        color: IVColors.get("Colors/Background new/BgFormOverVideo")
-                                    }
-                                }
-                                Label {
-                                    text: archiveStreamer.cameraResolution
-                                          ? Math.round(Number(archiveStreamer.currentFPS)) + " к/c"
-                                          : ""
-                                    Layout.alignment: controlsAlignment
-                                    font: IVColors.getFont("Label accent")
-                                    leftPadding: 4
-                                    rightPadding: 4
-                                    color: IVColors.get("Colors/Text new/TxContrast")
-                                    background: Rectangle {
-                                        visible: parent.text.length > 0
-                                        color: IVColors.get("Colors/Background new/BgFormOverVideo")
-                                    }
-                                }
+                        }
+                        Label {
+                            text: archiveStreamer.currentTime || ""
+                            Layout.alignment: archiveControls.settingButtons.posAlignment
+                            font: IVColors.getFont("Label accent")
+                            leftPadding: 4
+                            rightPadding: 4
+                            color: IVColors.get("Colors/Text new/TxContrast")
+                            background: Rectangle {
+                                visible: parent.text.length > 0
+                                color: IVColors.get("Colors/Background new/BgFormOverVideo")
                             }
                         }
                     }
 
-                    Rectangle {
-                        id: iv_arc_menu_new
+                    RowLayout {
+                        spacing: 0
+                        Layout.alignment: archiveControls.settingButtons.posAlignment
 
-                        property real spacing: 4 * root.isize
-                        z: cameraInfoBlock.z + 1
-                        width: archiveControls ? archiveControls.width + 2 * spacing : 0
-                        height: 32 * root.isize
-                        visible: archiveControls && root.width > archiveControls.implicitWidth
-
-                        anchors {
-                            bottom: iv_arc_slider_new ? iv_arc_slider_new.top : parent.bottom
-                            bottomMargin: 8 * root.isize
-                            horizontalCenter: parent.horizontalCenter
+                        Label {
+                            text: archiveStreamer.cameraResolution || ""
+                            Layout.alignment: archiveControls.settingButtons.posAlignment
+                            font: IVColors.getFont("Label accent")
+                            leftPadding: 4
+                            rightPadding: 4
+                            color: IVColors.get("Colors/Text new/TxContrast")
+                            background: Rectangle {
+                                visible: parent.text.length > 0
+                                color: IVColors.get("Colors/Background new/BgFormOverVideo")
+                            }
                         }
-
-                        color: IVColors.get("Colors/Background new/BgFormOverVideo")
-                        radius: 8*root.isize
-
-                        Loader {
-                            id: archiveControlsLoader
-                            active: root.fullUiActive
-                            visible: active
-                            anchors.fill: parent
-                            sourceComponent: archiveControlsComponent
+                        Label {
+                            text: archiveStreamer.cameraResolution ? Math.round(Number(archiveStreamer.currentFPS)) + " к/c" : ""
+                            Layout.alignment: archiveControls.settingButtons.posAlignment
+                            font: IVColors.getFont("Label accent")
+                            leftPadding: 4
+                            rightPadding: 4
+                            color: IVColors.get("Colors/Text new/TxContrast")
+                            background: Rectangle {
+                                visible: parent.text.length > 0
+                                color: IVColors.get("Colors/Background new/BgFormOverVideo")
+                            }
                         }
-                    }
-
-                    Loader {
-                        id: timelineLoader
-                        active: root.fullUiActive
-                        visible: active
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.bottom: parent.bottom
-                        sourceComponent: timelineComponent
                     }
                 }
             }
-        }
 
-        Component {
-            id: archiveControlsComponent
+            Rectangle {
+                id: iv_arc_menu_new
 
-            ArchiveControls {
-                id: archiveControls
-
-                z: mainMouseArea.z + 2
-                height: iv_arc_menu_new.height - iv_arc_menu_new.spacing * 2
-                spacing: iv_arc_menu_new.spacing
+                property real spacing: 4
+                z: cameraInfoBlock.z + 1
+                width: archiveControls.width + 2 * spacing
+                height: 32
+                visible: !root.commonArchiveStripVisible && root.width > archiveControls.implicitWidth
 
                 anchors {
-                    centerIn: parent
-                    margins: iv_arc_menu_new.spacing
+                    bottom: iv_arc_slider_new.top
+                    bottomMargin: 8
+                    horizontalCenter: parent.horizontalCenter
                 }
 
-                archiveStreamer: root.archiveStreamer
-                iv_arc_slider_new: root.timelineItem()
-                imagePipeline: root.imagePipeline
-                m_i_curr_scale: root.m_i_curr_scale
-                needToUpdateArchive: root.needToUpdateArchive
-                archiveId: root.archiveId
-                rootRef: root
-                cameraId: root.cameraId
-                isIntervalMode: root.isIntervalMode
-                archiveTime: root.archiveTime
-                updateTimeFromSlider: root.updateTimeFromSlider
-                updateTimeFromCalendar: root.updateTimeFromCalendar
-                funcSwitchSelectIntervalMode: root.funcSwitchSelectIntervalMode
+                color: IVColors.get("Colors/Background new/BgFormOverVideo")
+                radius: 8
 
-                onScaleChosen: {
-                    root.m_i_curr_scale = index
-                }
-                onClearPendingUpdate: {
-                    root.needToUpdateArchive = false
+                ArchiveControls {
+                    id: archiveControls
+
+                    z: mainMouseArea.z + 2
+                    height: parent.height - parent.spacing*2
+                    spacing: parent.spacing
+
+                    anchors {
+                        centerIn: parent
+                        margins: parent.spacing
+                    }
+
+                    archiveStreamer: archiveStreamer
+                    iv_arc_slider_new: iv_arc_slider_new
+                    imagePipeline: imagePipeline
+                    m_i_curr_scale: root.m_i_curr_scale
+                    needToUpdateArchive: root.needToUpdateArchive
+                    archiveId: root.archiveId
+                    rootRef: root
+                    cameraId: root.cameraId
+                    isIntervalMode: root.isIntervalMode
+                    archiveTime: root.archiveTime
+                    updateTimeFromSlider: root.updateTimeFromSlider
+                    updateTimeFromCalendar: root.updateTimeFromCalendar
+                    funcSwitchSelectIntervalMode: root.funcSwitchSelectIntervalMode
+
+                    onScaleChosen: {
+                        root.m_i_curr_scale = index
+                    }
+                    onClearPendingUpdate: {
+                        root.needToUpdateArchive = false
+                    }
                 }
             }
-        }
-
-        Component {
-            id: timelineComponent
 
             IVArc_slider_new2 {
                 id: iv_arc_slider_new
@@ -1189,19 +827,15 @@ Item {
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
 
-                visible: root.width > 622
-
-                isize: root.isize
-                height: 40 * (root.isize)
+                visible: !root.commonArchiveStripVisible && root.width > 622
+                height: 40
                 archivePlayer: idarchive_player
                 key2: root.key2
                 previewMargin: iv_arc_menu_new.height
                 isMultiscreen: root.is_multiscreen
                 isCommonPanel: root.isCommonPanel
-                showEvents: wndControlPanel.archiveControls
-                            && [-1,2].indexOf(wndControlPanel.archiveControls.iv_butt_spb_events_skip.type) > -1
-                showBookmarks: wndControlPanel.archiveControls
-                               && [-1,6].indexOf(wndControlPanel.archiveControls.iv_butt_spb_events_skip.type) > -1
+                showEvents: [-1,2].indexOf(archiveControls.iv_butt_spb_events_skip.type) > -1
+                showBookmarks: [-1,6].indexOf(archiveControls.iv_butt_spb_events_skip.type) > -1
                 intervalBeforeIndex: root.exportIntervalBeforeIndex
                 intervalAfterIndex: root.exportIntervalAfterIndex
                 currentScale: root.m_i_curr_scale
@@ -1224,34 +858,11 @@ Item {
                         loops++
                         if (root.getFrameTime() > 0 || loops >= 50) { stop() }
                     }
-
-                    onRunningChanged: {
-                        if(!running){
-                            var fTime = root.getFrameTime()
-                            if (fTime > 10) iv_arc_slider_new.currentDate = new Date(fTime)
-                            else {
-                                var dateTime = wndControlPanel.archiveControls
-                                               ? wndControlPanel.archiveControls.calendarButton.calendar.chosenDate
-                                                 + " " + wndControlPanel.archiveControls.calendarButton.calendar.chosenTime
-                                               : ""
-                                if (dateTime !== "") {
-                                    var parts = dateTime.split(/[. :]/)
-                                    var dateObject = new Date(parts[2], parts[1] - 1, parts[0],
-                                                              parts[3], parts[4], parts[5])
-                                    iv_arc_slider_new.currentDate = dateObject
-                                }
-                            }
-                            if (root.m_uu_i_ms_begin_interval < 1 && root.m_uu_i_ms_end_interval < 1) {
-                                root.funcReset_selection()
-                            }
-                            iv_arc_slider_new.refreshModel()
-                        }
-                    }
                 }
 
                 Component.onCompleted: {
                     iv_arc_slider_new.ready = false
-                    iv_arc_slider_new.setScale(m_i_curr_scale)
+                    iv_arc_slider_new.setScale(root.m_i_curr_scale)
                     onTimer.start()
                 }
 
@@ -1260,7 +871,7 @@ Item {
                 }
 
                 onUpdateCalendarDT: {
-                    updateTimeFromSlider()
+                   root.updateTimeFromSlider()
                 }
 
                 onDoubleClicked: {
@@ -1286,332 +897,5 @@ Item {
         id: contextMenu
         functReturnToRealtime: root.functReturnToRealtime
         funcCloseSet: root.funcCloseSet
-    }
-
-
-    function getMenuObjectByIndex(i_menu_index_av){
-        switch (i_menu_index_av){
-            case 0: return menu_item_source_0
-            case 1: return menu_item_source_1
-            case 2: return menu_item_source_2
-            case 3: return menu_item_source_3
-            case 4: return menu_item_source_4
-            case 5: return menu_item_source_5
-            case 6: return menu_item_source_6
-            default: return 0
-        }
-    }
-    function isSmallMode() {
-        var panel = controlPanelItem()
-        if (!panel)
-            return true
-        return panel.width < root.smallSizePanel
-    }
-
-    function correctIntervalSelectLeft_ByCommand2(time) {
-        correctIntervalSelectLeft_Level1(time)
-    }
-
-    function correctIntervalSelectLeft_Level1(i_uu_64_new_bound_time_av) {
-        var i_uu_64_bound_time_lv = i_uu_64_new_bound_time_av
-        idLog3.warn('<interv>correctIntervalSelectLeft_Level1 '
-                    + 'm_uu_i_ms_begin_interval ' + root.m_uu_i_ms_begin_interval
-                    + ' i_uu_64_bound_time_lv '+ i_uu_64_bound_time_lv)
-
-        if (i_uu_64_bound_time_lv >= root.m_uu_i_ms_begin_interval + 5000)
-            root.m_uu_i_ms_end_interval = i_uu_64_bound_time_lv
-    }
-    function correctIntervalSelectRight_Level1(i_uu_64_new_bound_time_av) {
-        var i_uu_64_bound_time_lv = i_uu_64_new_bound_time_av
-        idLog3.warn('<interv>correctIntervalSelectLeft m_uu_i_ms_end_interval '
-                    + root.m_uu_i_ms_end_interval + ' i_uu_64_bound_time_lv '
-                    + i_uu_64_bound_time_lv)
-
-        if (root.m_uu_i_ms_end_interval + 5000 < i_uu_64_bound_time_lv) {
-            //console.info("correctIntervalSelectRight_Level1 1")
-            //ch00604 root.m_uu_i_ms_begin_interval = root.m_uu_i_ms_end_interval;
-            //ch00604 root.m_uu_i_ms_end_interval = i_uu_64_frame_time_lv;
-        }
-        else root.m_uu_i_ms_begin_interval = i_uu_64_bound_time_lv
-    }
-
-    function correctIntervalSelectRight_ByCommand2(time) {
-        correctIntervalSelectRight_Level1(time)
-    }
-
-    //ch90918 - это - спрятать или пок-ть общ панель е
-    function commonPanelSetVisible(i_val_av) {
-        idLog3.warn('<common_pan> 200712 31 ')
-
-        var i_height_lv = root.height
-        var panel = controlPanelItem()
-        var i_height_contr_panel_lv = panel ? panel.height : 0
-
-        root.visible = (0 !== i_val_av)
-
-        if (0 !== i_val_av) root.height = i_height_contr_panel_lv
-        else root.height = 0
-    }
-
-    function updateTime811_Causing1() {
-        idLog3.warn('<calendar> updateTime811_Causing1 b_input_time_outside_cahange ' + b_input_time_outside_cahange)
-        updateTime811()
-    }
-
-     function updateTime811() {
-         idLog3.warn('updateTime811 begin ')
-         var controls = archiveControlsItem()
-         var timeline = timelineItem()
-         if (!controls || !timeline)
-             return
-         var s_date_lv = controls.calendarButton.calendar.chosenDate
-
-         idLog3.warn('<calendar> updateTime811 calendarButton.calendar.chosenDate ' + controls.calendarButton.calendar.chosenDate
-                     + ' calendarButton.calendar.chosenTime ' + controls.calendarButton.calendar.chosenTime
-                     + ' s_date_lv ' + s_date_lv
-                     + ' input_time_outside_cahange ' + root.b_input_time_outside_cahange)
-
-         idLog3.warn('calendarButton.calendar.chosenDate ' + controls.calendarButton.calendar.chosenDate
-                     + ' calendarButton.calendar.chosenTime ' + controls.calendarButton.calendar.chosenTime
-                     + ' s_date_lv ' + s_date_lv)
-
-         idLog3.warn('updateTime811 root.time811' + root.time811
-                     + ' b_input_time_outside_cahange ' + root.b_input_time_outside_cahange)
-         if (root.time811 == "") {
-
-         } else {
-             idLog3.warn('updateTime811 root.time811 301')
-             if (!root.b_input_time_outside_cahange)
-             {
-                 if (!timeline.sliderIsDragged)
-                     timeline.currentDate = new Date(root.time811)
-             }
-         }
-         idLog3.warn('updateTime811 root.time811 4')
-         root.b_input_time_outside_cahange = false
-     }
-
-    function updateSpeedSlider() {
-        root.speed = Math.abs(videoPlayerControls.iv_speed_slider.speed)
-        if (playerLoader.item !== null){
-            var o = {};
-            o.speed = videoPlayerControls.iv_speed_slider.speed/1000
-            playerLoader.item.setSpeed(o);
-        }
-    }
-
-    function correctIntervalSelectLeft_Causing1() {
-        root.correctIntervalSelectLeft()
-        correctIntervalSelect_CommonPart()
-    }
-
-    function correctIntervalSelect_CommonPart() {
-        root.m_i_is_interval_corresp_event = 0
-        root.m_s_start_event_id = 0
-    }
-    function correctIntervalSelectLeft_ByCommand_Causing1() {
-        root.correctIntervalSelectLeft_ByCommand()
-        correctIntervalSelect_CommonPart()
-    }
-
-    function correctIntervalSelectRight_Causing1() {
-        idLog3.warn('<interv> correctIntervalSelectRight_Causing1 beg')
-
-        root.correctIntervalSelectRight()
-        correctIntervalSelect_CommonPart()
-    }
-
-    function correctIntervalSelectRight_ByCommand_Causing1() {
-        idLog3.warn('<interv> correctIntervalSelectRight_ByCommand_Causing1 beg')
-
-        root.correctIntervalSelectRight_ByCommand()
-        correctIntervalSelect_CommonPart()
-    }
-
-    function correctInterval_Causing1(i_uu_64_time_av) {
-        correctInterval_Level1(i_uu_64_time_av)
-
-        root.m_i_is_interval_corresp_event = 0
-        root.m_s_start_event_id = 0
-        root.m_i_select_interv_state = root.c_I_IS_CORRECT_INTERV
-    }
-
-    function drawStartInterval_Level1(i_uu_64_changed_time_av) {
-        //зададим маленький начальный интервал е
-        var i_uu_64_frame_time_lv = 0
-        i_uu_64_frame_time_lv = i_uu_64_changed_time_av
-        //idLog3.warn('select_interval_ivichb onClicked bef addDeltaTimeUU64' );
-        root.m_uu_i_ms_begin_interval = i_uu_64_frame_time_lv
-        root.m_uu_i_ms_begin_interval = root.m_uu_i_ms_begin_interval - 5000
-
-        root.m_uu_i_ms_end_interval = i_uu_64_frame_time_lv
-        root.m_uu_i_ms_end_interval = root.m_uu_i_ms_end_interval + 5000
-        root.m_i_select_interv_state = root.c_I_IS_SECOND_SELECT_INTERV
-
-        //upload_left_bound_lb.visible4 = true
-        //upload_left_bound_2_lb.visible4 = true
-        root.m_i_is_interval_corresp_event = 0
-        //ch90723 root.m_b_ness_check_present_event = 0;
-        root.m_s_start_event_id = 0
-    }
-
-    function extComponentsSetVisible(b_is_visible_av) {
-        //upload_left_bound_2_lb.visible2 = b_is_visible_av
-        //upload_left_bound_lb.visible2 = b_is_visible_av
-        //iv_butt_spb_bmark_skip.visible2 = b_is_visible_av
-
-        export_media_button.visible = can_export_acc.isAllowed
-        sound_Loader.create()
-        photocam_Loader.create()
-        switch_to_real_time_button.visible = true
-        image_correct_Loader.create()
-        fullscreen_button.visible = true
-    }
-
-    function complete2() {
-        var b_cond_lv = false
-        soundLoader.create()
-        imageCorrLoader.create()
-        photocamLoader.create()
-
-        b_cond_lv = (0 === root.getCamCommonPanelModeUseSetPanel())
-
-        idLog3.warn('<root> complete2 getCamCommonPanelModeUseSetPanel ' + b_cond_lv)
-
-        if (0 === root.getCamCommonPanelModeUseSetPanel_Deb())
-        {
-            b_cond_lv = root.isSmallMode()
-            idLog3.warn('<root> complete2 b_cond_lv ' + b_cond_lv)
-            if (!root.isSmallMode())
-                mainMouseArea.enabled = false
-        }
-        else extComponentsSetVisible(false)
-    }
-
-    //ch90917
-    function showInterval908(uu_i_ms_begin_interval_av, uu_i_ms_end_interval_av, s_event_text_interval_av) {
-        var s_event_text_trunc_lv = ''
-        root.m_uu_i_ms_begin_interval = uu_i_ms_begin_interval_av
-        root.m_uu_i_ms_end_interval = uu_i_ms_end_interval_av
-        root.m_i_select_interv_state = root.c_I_IS_CORRECT_INTERV
-
-        idLog3.warn('<' + root.key2 + '_' + root.key3 + '_events>'
-                    + ' showInterval908 m_uu_i_ms_begin_interval ' + root.m_uu_i_ms_begin_interval
-                    + ' m_uu_i_ms_end_interval ' + root.m_uu_i_ms_end_interval)
-
-        //upload_left_bound_2_lb.text = Language.getTranslate("Interval selected", "Выбран интервал")
-        if ('' !== s_event_text_interval_av) {
-            if (s_event_text_interval_av === s_event_text_trunc_lv) {
-                //upload_left_bound_2_lb.text += ' ' + s_event_text_interval_av
-                //tooltip908.contentItem.text = ''
-            } else {
-                upload_left_bound_2_lb.text += ' ' + s_event_text_trunc_lv
-                tooltip908.contentItem.text = s_event_text_interval_av
-            }
-        }
-        //upload_left_bound_lb.visible4 = true
-        //upload_left_bound_2_lb.visible4 = true
-    }
-
-    function moveToEventBySlider_Causing1(b_is_right_av, b_is_bookmarks_av, rl_mess_x_av, rl_mess_y_av) {
-        var i_res_lv = 0
-
-        var s_event_text_lv = ''
-        var i_is_already_interval_selected_lv = 0
-        var s_warning_pref_lv = ''
-
-        if (root.m_i_current_timeout_request_to_events > 20000
-                || root.m_i_marker_last_request_to_events + 40000 < i_curr_time_lv)
-            root.m_i_current_timeout_request_to_events = 2000
-
-        if (0 !== root.m_uu_i_ms_begin_interval)
-            i_is_already_interval_selected_lv = 1
-
-        if (root.c_I_TIMEOUT_907 === i_res_lv) {
-            root.m_i_current_timeout_request_to_events += 2000
-            root.showNextEventNotFoundMess(
-                        root.m_i_current_timeout_request_to_events,
-                        rl_mess_x_av, rl_mess_y_av,
-                        'событие за ' + root.m_i_current_timeout_request_to_events
-                        / 1000 + ' сек не найденно, попробуйте еще раз')
-            //e ch90731
-        } //e
-        else if (root.c_I_NOT_FOUND_907 === i_res_lv) {
-            if (b_is_bookmarks_av)
-                s_warning_pref_lv = 'метка'
-            else
-                s_warning_pref_lv = 'событие'
-            root.showNextEventNotFoundMess(
-                        root.m_i_current_timeout_request_to_events,
-                        rl_mess_x_av, rl_mess_y_av,
-                        s_warning_pref_lv + ' для заданного промежутка не существует')
-        } //e
-        else if (root.c_I_SUCCESS_907 === i_res_lv) {
-            root.m_i_is_interval_corresp_event = 1
-            root.m_i_is_interval_corresp_event_bookmark = b_is_bookmarks_av ? 1 : 0
-        }
-        //e
-        root.m_i_marker_last_request_to_events = i_curr_time_lv
-    }
-
-    function positioningContextMenu() {
-        var coord_x = mouseAreaRender.mouseX
-        var coord_y = mouseAreaRender.mouseY
-        if (coord_x + menuLoaderContext_menu2.componentMenu.width > root.width) {
-            coord_x = (root.width - menuLoaderContext_menu2.componentMenu.width) - 15
-        }
-
-        menuLoaderContext_menu2.componentMenu.x = coord_x
-        menuLoaderContext_menu2.componentMenu.y = coord_y
-    }
-
-    function timerActions() {
-        m_i_event_not_found_visible_counter--
-        if (0 === m_i_event_not_found_visible_counter) {
-            next_event_not_found_rct_hint.visible = false
-        }
-    }
-    function showNextEventNotFoundMess(i_timeout_av, rl_x_av, rl_y_av, s_text_av) {
-        var i_x_lv = 10
-        var i_y_lv = 10
-        next_event_not_found_rct_hint.visible = true
-        m_i_event_not_found_visible_counter = 7
-        i_x_lv = rl_x_av
-        i_y_lv = rl_y_av
-        next_event_not_found_rct_hint.x = i_x_lv
-        next_event_not_found_rct_hint.y = i_y_lv
-
-        next_event_not_found_rct_hint_text.text = s_text_av
-        next_event_not_found_rct_hint.width = next_event_not_found_rct_hint_text.contentWidth
-        next_event_not_found_rct_hint.height = next_event_not_found_rct_hint_text.contentHeight
-        idLog3.warn('<events> showNextEventNotFoundMess i_x_lv ' + i_x_lv
-                    + ' i_y_lv ' + i_y_lv + ' next_event_not_found_rct_hint.x '
-                    + next_event_not_found_rct_hint.x + ' next_event_not_found_rct_hint.y '
-                    + next_event_not_found_rct_hint.y + ' next_event_not_found_rct_hint_text.text '
-                    + next_event_not_found_rct_hint_text.text)
-    }
-
-    function safeSetProperty(component, prop, func) {
-        if (prop in component) {
-            component[prop] = func
-        }
-    }
-
-    function funcReset_selection() {
-        var timeline = timelineItem()
-        if (!timeline)
-            return
-        if (timeline.setInterval) {
-            timeline.setInterval = false
-            timeline.setInterval = true
-        }
-        root.m_uu_i_ms_begin_interval = timeline.currentDate.getTime()
-        root.m_uu_i_ms_end_interval = timeline.currentDate.getTime()
-    }
-
-    function validateSettings(value){
-        try { JSON.parse(value) }
-        catch (e) { return null }
-        return JSON.parse(value)
     }
 }

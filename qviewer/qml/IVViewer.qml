@@ -67,10 +67,8 @@ Item {
   Layout.preferredWidth:   ((parent.width / parent.columns)   * root._colSpan)   -2
   onGlobSignalsObjectChanged:
   {
-      console.error("GGGGGGGGGGG onGlobSignalsObjectChanged",root.globSignalsObject)
       if(root.globSignalsObject)
       {
-          console.error("GGGGGGGGGGG onGlobSignalsObjectChanged 222222222",root.globSignalsObject)
            mmConn.target = root.globSignalsObject;
       }
 
@@ -83,7 +81,6 @@ Item {
       id:mmConn
       onSetToArchive:
       {
-          console.error("GGGGGGGGGGG SET TO ARCH VIEWER" , root.isRealtime)
         if(root.isRealtime)
         {
             root.switch_viewer(null);
@@ -91,7 +88,6 @@ Item {
       }
       onSetToRealtime:
       {
-           console.error("GGGGGGGGGGG SET TO REAL VIEWER" , root.isRealtime)
           if(!root.isRealtime)
           {
               root.switch_viewer(null);
@@ -100,12 +96,10 @@ Item {
       onTabSelected5:
       {
           root.tab_id = root.globSignalsObject.tabUniqId;
-          console.error( "250602 030 tabUniqId ", root.globSignalsObject.tabUniqId );
       }
       onTabUniqIdChanged:
       {
           root.tab_id = root.globSignalsObject.tabUniqId;
-          console.error( "250602 031 tabUniqId ", root.globSignalsObject.tabUniqId );
       }
   }
 
@@ -124,7 +118,6 @@ Item {
       name: 'sourse_switch_'+root.Window.window.ivComponent.unique
       onValueChanged:
       {
-          console.error("AAAAAAAAAA IvVcliSetting archSwitch.value = ",archSwitch.value,root.isRealtime)
 //          if(archSwitch.value === "realtime")
 //          {
 //              if(!root.isRealtime)
@@ -185,11 +178,7 @@ Item {
       id:camQualitySettings
       name:"quality."+root.key2
   }
-    onMyParentChanged:
-    {
-        //console.error("PARENT = ",root.myParent)
 
-    }
   onGlobalComponentChanged:
   {
       viewer_command_obj.myGlobalComponent = Qt.binding(function(){return root.globalComponent})
@@ -213,7 +202,6 @@ Item {
     target: root.globalComponent
     onSetsSwichSourse:
     {
-        console.error("VIEWER SWITCH")
       root.switch_viewer(null);
     }
   }
@@ -224,17 +212,14 @@ Item {
         signal command_to_viewer(string command)
         onCommand_to_viewer: function (command){
             //root.m_b_ness_pass_params = val;
-            //console.info("val = ", m_b_ness_pass_params)
           if (command !== null || command !== undefined)
           {
             switch(command) {
             case 'viewers:switch':
-                console.error("VIEWER SWITCH")
               root.switch_viewer(null);
               break;
             case 'viewers:fullscreen':
               root.isFullscreen = !root.isFullscreen;
-              //  console.error("IVViewer",command);
               //root.globalComponent.command1('viewers:fullscreen', root,{});
                // root.isFullscreen = !root.isFullscreen;
                 if(integration_flag.value === "SDK")
@@ -255,7 +240,6 @@ Item {
               root.switch_viewer(true);
               break;
             case 'windows:hide':
-                console.error("windows:hide = ",command);
              root.globalComponent.command1(command,root,{});
 
               break;
@@ -317,19 +301,14 @@ Item {
       triggeredOnStart:true
       onTriggered:
       {
-          console.error("onQualityChanged = ",root.quality)
           if(rootRect.viewer)
           {
-              console.error("onQualityChanged rootRect.viewer = ",root.quality)
               if(root.quality === "Auto")
               {
-                  //console.error("onQualityChanged rootRect.viewer auto= ",root.quality)
-
                   root.safeSetProperty(rootRect.viewer, 'video', Qt.binding(function(){
                     return ( (root.width < (root.myScreenWidth/3)) || (root.height < (root.myScreenHeight/3)) )?'#000_MULTISCREEN':'#000_FULLSCREEN';}));
                     if(integration_flag.value === "SDK")
                    {
-                      console.info("IVViewer.qml onQualityChanged camQualitySettings.value = ",camQualitySettings.value)
 
                       var propSettingsObj = {};
                       if(camQualitySettings.value !== null && camQualitySettings.value !== undefined && camQualitySettings.value !== "")
@@ -343,7 +322,6 @@ Item {
                            camQualitySettings.value = vvv;
                         }
                       }
-                      console.error("onQualityChanged rootRect.viewer = ",camQualitySettings.value)
                    }
               }
               else
@@ -359,11 +337,9 @@ Item {
                           {
                            camQualitySettings.value = vvv;
                           }
-                          console.error("onQualityChanged rootRect.viewer = ",camQualitySettings.value)
                       }
                       catch( exception)
                       {
-                          console.error("qviewer 123 ",exception );
                            propsTimer.stop();
                       }
                    }
@@ -409,7 +385,6 @@ onQualityChanged:
      root.isParentCreationInterrupted = true;
   }
   function safeSetProperty(component1, prop, func) {
-      //console.info("=========== prop = ", prop, " component = ", component1, " func = ", func);
     if(component1 !== null && component1 !== undefined
             && prop !== null && prop !== undefined
             && func !== null && func !== undefined
@@ -420,7 +395,6 @@ onQualityChanged:
   onRunningChanged: {
     idLog.debug('<IVViewer.qml>onRunningChanged, running= ' + root.running + ', ' + key2);
     if(root.running && rootRect.viewer === null) {
-       // console.error("state VVVVVVVVVVVVVVVVV 6 onRunningChanged",root.running)
       rootRect.createQml();
     }
   }
@@ -428,7 +402,6 @@ onQualityChanged:
     idLog.debug('<IVViewer.qml>onIsFullscreenChanged ' + isFullscreen + ', ' + key2);
   }
   onKey2Changed: {
-      //console.error("state VVVVVVVVVVVVVVVVV 3 key2 = ",root.key2)
       root.wnd_unique = root.Window.window.unique
       rootRect.createQml();
       idLog.debug('<IVViewer.qml>onKey2Changed key2 ' + key2);
@@ -456,7 +429,6 @@ onQualityChanged:
     root.fromRealtime = root.isRealtime;
     idLog.debug('<IVViewer.qml>switch_viewer, fromRealtime=' + root.fromRealtime);
     root.isRealtime = !root.isRealtime;
-   // console.error("state VVVVVVVVVVVVVVVVV 5 switch_viewer")
     rootRect.createQml();
   }
   Component.onCompleted: {
@@ -465,12 +437,10 @@ onQualityChanged:
       IVCompCounter.addComponent(root);
     }
     idLog.debug('<IVViewer.qml>Component.onCompleted { ');
-    console.info('<IVViewer.qml>Component.onCompleted { ');
 //    if('ivType' in root.Window.window && root.Window.window.ivType === 'IVWindowComponent'
 //      && root.Window.window.isItWsVideoPlayer(root)) {
 //      root.isFullscreen = root.Window.window.visibility === Window.Maximized ? true : false;
 //    }
-    //console.error("state VVVVVVVVVVVVVVVVV 4 onCompleted")
 
     var arc_time = "";
 
@@ -480,16 +450,13 @@ onQualityChanged:
     }
 
     idLog.debug('<IVViewer.qml>Component.onCompleted unique= '+root.Window.window.unique + ' key2= ' + root.key2 + ' ivArchiveTime= ' + arc_time);
-    console.info('<IVViewer.qml>Component.onCompleted unique= ',root.Window.window.unique, ' key2= ', root.key2, ' ivArchiveTime= ', arc_time);
 
     rootRect.createQml();
 
-    console.info('<IVViewer.qml>Component.onCompleted } ');
     idLog.debug('<IVViewer.qml>Component.onCompleted } ');
   }
   Component.onDestruction: {
     idLog.debug('<IVViewer.qml>Component.onDestruction { ');
-    console.info('<IVViewer.qml>Component.onDestruction { ');
 
       var arc_time = "";
 
@@ -499,7 +466,6 @@ onQualityChanged:
       }
 
       idLog.debug('<IVViewer.qml>Component.onDestruction unique= '+root.wnd_unique + ' key2= ' + root.key2 + ' ivArchiveTime= ' + arc_time);
-      console.info('<IVViewer.qml>Component.onDestruction unique= ',root.wnd_unique, ' key2= ', root.key2, ' ivArchiveTime= ', arc_time);
 
     if (root.debug_mode === true)
     {
@@ -507,8 +473,6 @@ onQualityChanged:
     }
     viewerLoader.destroy1();
     root._clear();
-    //console.error("viewer destroy ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
-    console.info('<IVViewer.qml>Component.onDestruction } ');
     idLog.debug('<IVViewer.qml>Component.onDestruction } ');
   }
   Rectangle{
@@ -520,14 +484,12 @@ onQualityChanged:
     color: "black"//(rootRect.viewer != null && rootRect.viewer !== undefined)?'black':"transparent"
     function createQml() {
 
-       // console.error("state VVVVVVVVVVVVVVVVV 4 createQml")
       idLog.debug('<IVViewer>createQml {');
       if(root.isCreationInterrupted || root.isParentCreationInterrupted) {
         idLog.debug('<IVViewer>skip createQml');
         idLog.debug('<IVViewer>createQml }');
         return;
       }
-      console.error("AAAAAAAAAAAAAAAA archOnly.value = ",archOnly.value , root.isRealtime)
       if(archOnly.value === "true")
       {
 
@@ -535,7 +497,6 @@ onQualityChanged:
       }
 
 
-     // console.error("state VVVVVVVVVVVVVVVVV 5 createQml")
       if(root.key2 !== '')
       {
         idLog.debug('<IVViewer.qml>createQml, key2=' + root.key2
@@ -543,12 +504,10 @@ onQualityChanged:
 
         var unique = 'qviewer.' + root.Window.window.unique;
         var qmlfile = '/qtplugins/iv/viewers/realtimeplayer/IVRealtimePlayer.qml';
-         // console.error("state VVVVVVVVVVVVVVVVV 6 createQml",root.isRealtime);
         if(root.isRealtime){
           idLog.debug('<IVViewer>createQml isRealtime');
           if(root.qmlRealtime !== 'auto')
             qmlfile = root.qmlRealtime;
-        // console.error("state VVVVVVVVVVVVVVVVV 2")
           viewerLoader.create1(  qmlfile);
         }
         else {
@@ -565,7 +524,6 @@ onQualityChanged:
 
           if(root.qmlArchive !== 'auto')
             qmlfile = root.qmlArchive;
-         // console.error("state VVVVVVVVVVVVVVVVV 3")
           viewerLoader.create1(  qmlfile);
         }
       }
@@ -592,7 +550,6 @@ onQualityChanged:
             {
                 viewerLoader.destroy1();
             }
-           // console.error("CREATE REALTIMEPLAYER")
             viewerLoader.source = qmlFile2;
             viewerLoader.isCreated = true;
 
@@ -628,17 +585,14 @@ onQualityChanged:
 
 
                 if(root.isCreationInterrupted || root.isParentCreationInterrupted) {
-                  // console.error("viewer return")
                   return;
                 }
                 //key2
                 //isPtzEnabled
                 rootRect.viewer = viewerLoader.item;
                 root.__viewer =viewerLoader.item;
-                 //console.error("viewer =",rootRect.viewer);
                 //rootRect.viewer.anchors.fill = Qt.binding(function(){ return rootRect;});
                 root.safeSetProperty(rootRect.viewer, 'arc_vers',1);
-                console.error("qviewer key2 = ",root.key2);
                 //rootRect.viewer.key2 = root.key2;
                 root.safeSetProperty(rootRect.viewer, 'key2',
                   Qt.binding(function(){ return root.key2}));
@@ -739,7 +693,6 @@ onQualityChanged:
             }
             if(viewerLoader.status === Loader.Error)
             {
-                console.error("viewer loader error");
             }
             if(viewerLoader.status === Loader.Null)
             {

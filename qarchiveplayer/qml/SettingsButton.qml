@@ -11,7 +11,7 @@ import iv.viewers.archiveplayer 1.0
 import ArchiveComponents 1.0
 
 C.IVButtonControl {
-    id: ev_settings_butt
+    id: root
 
     property var rootRef
     property int posAlignment: Qt.AlignTop | Qt.AlignLeft
@@ -57,8 +57,8 @@ C.IVButtonControl {
 
         x: {
             settingsMenu.opened;
-            var cx = (ev_settings_butt.width - settingsMenu.controlWidth) / 2;
-            var p = ev_settings_butt.mapToItem(rootRef, 0, 0);
+            var cx = (root.width - settingsMenu.controlWidth) / 2;
+            var p = root.mapToItem(rootRef, 0, 0);
             var right = p.x + cx + settingsMenu.controlWidth + settingsMenu.leftPadding;
             var diff = Math.min(0, rootWidth - right);
             return cx + diff;
@@ -159,7 +159,7 @@ C.IVButtonControl {
                                 var buttons = [btnTL, btnTR, btnBL, btnBR]
                                 i = Math.max(0, Math.min(3, i))
                                 exclusiveGroup.checkedButton = buttons[i]
-                                ev_settings_butt.posAlignment = indexToFlags(i)
+                                root.posAlignment = indexToFlags(i)
                             }
 
                             Connections {
@@ -663,7 +663,7 @@ C.IVButtonControl {
         Timer {
             id: filterRefresh
             interval: 1000
-            onTriggered: iv_arc_slider_new.updateFilter(ev_settings_butt.filter)
+            onTriggered: iv_arc_slider_new.updateFilter(root.filter)
         }
 
         function eventInFilter(id){
@@ -686,7 +686,7 @@ C.IVButtonControl {
             target: settingsMenu
             onClosed: {
                 if (!settingsMenu.applied)
-                    ev_settings_butt.posAlignment = backend.indexToFlags(backend.orientationIndex)
+                    root.posAlignment = backend.indexToFlags(backend.orientationIndex)
             }
         }
     }
@@ -756,14 +756,14 @@ C.IVButtonControl {
             draft.green      = backend.green
             draft.blue       = backend.blue
 
-            ev_settings_butt.posAlignment = backend.indexToFlags(backend.orientationIndex)
+            root.posAlignment = backend.indexToFlags(backend.orientationIndex)
         }
 
         function apply() {
             if (!imagePipeline)
                 return
 
-            backend.orientationIndex = backend.flagsToIndex(ev_settings_butt.posAlignment)
+            backend.orientationIndex = backend.flagsToIndex(root.posAlignment)
 
             backend.brightness = draft.brightness
             backend.contrast   = draft.contrast
@@ -776,11 +776,11 @@ C.IVButtonControl {
 
     QtObject {
         id: draft
-        property int brightness: imagePipeline.brightness
-        property int contrast:   imagePipeline.contrast
-        property int saturation: imagePipeline.saturation
-        property int red:        imagePipeline.rgbR
-        property int green:      imagePipeline.rgbG
-        property int blue:       imagePipeline.rgbB
+        property int brightness: imagePipeline ? imagePipeline.brightness : 50
+        property int contrast:   imagePipeline ? imagePipeline.contrast : 50
+        property int saturation: imagePipeline ? imagePipeline.saturation : 50
+        property int red:        imagePipeline ? imagePipeline.rgbR : 128
+        property int green:      imagePipeline ? imagePipeline.rgbG : 128
+        property int blue:       imagePipeline ? imagePipeline.rgbB : 128
     }
 }
