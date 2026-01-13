@@ -48,6 +48,7 @@ Item {
   property int compIndex:-1
   property string unique: "newclient"
   property string wnd_unique: ""
+  property bool isArchiveMinViewer: false
   //experimental camera.Layout.preferredHeight  = Qt.binding(function(){return ((mediaViewers.height / mediaViewers.rows)   * camera._rowSpan)   - mediaViewers.rowSpacing;});
 //  property int _dx: 1
 //  property int _dy: 1
@@ -548,6 +549,7 @@ onQualityChanged:
           idLog.debug('<IVViewer>createQml isRealtime');
           if(root.qmlRealtime !== 'auto')
             qmlfile = root.qmlRealtime;
+          root.isArchiveMinViewer = false;
         // console.error("state VVVVVVVVVVVVVVVVV 2")
           viewerLoader.create1(  qmlfile);
         }
@@ -565,6 +567,7 @@ onQualityChanged:
 
           if(root.qmlArchive !== 'auto')
             qmlfile = root.qmlArchive;
+          root.isArchiveMinViewer = qmlfile.indexOf('IVArchivePlayerMin.qml') !== -1;
          // console.error("state VVVVVVVVVVVVVVVVV 3")
           viewerLoader.create1(  qmlfile);
         }
@@ -574,6 +577,7 @@ onQualityChanged:
           idLog.debug('<IVViewer>createQml isAlertViewer');
          // var unique = 'qviewer.' + root.ivComponent.unique;
           qmlfile = '/qtplugins/iv/viewers/IVAlertViewer/IVAlertViewer.qml';
+          root.isArchiveMinViewer = false;
           viewerLoader.create1(  qmlfile);
       }
       idLog.debug('<IVViewer>createQml }');
@@ -639,46 +643,21 @@ onQualityChanged:
                 //rootRect.viewer.anchors.fill = Qt.binding(function(){ return rootRect;});
                 root.safeSetProperty(rootRect.viewer, 'arc_vers',1);
                 console.error("qviewer key2 = ",root.key2);
-                //rootRect.viewer.key2 = root.key2;
-                root.safeSetProperty(rootRect.viewer, 'key2',
-                  Qt.binding(function(){ return root.key2}));
-                root.isPTZ = Qt.binding(function (){return rootRect.viewer.isPtzEnabled});
-                root.safeSetProperty(rootRect.viewer, 'video', Qt.binding(function(){
-                    return !root.isFullscreen ?'#000_MULTISCREEN':'#000_FULLSCREEN';}));
-                root.safeSetProperty(rootRect.viewer, 'compIndex', Qt.binding(function(){
-                    return root.compIndex}));
-                root.safeSetProperty(rootRect.viewer, 'savedSetName', Qt.binding(function(){
-                  return root.savedSetName;
-                }));
-                root.safeSetProperty(rootRect.viewer, 'guid', Qt.binding(function(){
-                  return root.guid;
-                }));
-                root.safeSetProperty(rootRect.viewer, 'indexInSavedSet', Qt.binding(function(){
-                  return root.indexInSavedSet;
-                }));
-                root.safeSetProperty(rootRect.viewer, 'isFullscreen', Qt.binding(function(){
-                  return root.isFullscreen;
-                }));
-                root.safeSetProperty(rootRect.viewer, 'alert', Qt.binding(function(){
-                  return root.alert;
-                }));
-                root.safeSetProperty(rootRect.viewer, 'cyclic', Qt.binding(function(){
-                  return root.cyclic;
-                }));
-                root.safeSetProperty(rootRect.viewer, 'archive', Qt.binding(function(){
-                  return root.archive;
-                }));
-                root.safeSetProperty(rootRect.viewer, 'isSetsArchive', Qt.binding(function(){
-                  return root.isSetsArchive;
-                }));
-                if ( rootRect.viewer.tab_id !== undefined )
-                  rootRect.viewer.tab_id = root.tab_id;
-                idLog.debug('<IVViewer.qml>onBindings, fromRealtime=' + root.fromRealtime);
-                root.safeSetProperty(rootRect.viewer, 'fromRealtime',Qt.binding(function(){ return root.fromRealtime}));
-                root.safeSetProperty(rootRect.viewer, 'isRealtime', Qt.binding(function(){
-                  return root.isRealtime;
+                if (root.isArchiveMinViewer) {
+                  root.safeSetProperty(rootRect.viewer, 'key2',
+                    Qt.binding(function(){ return root.key2}));
+                  root.safeSetProperty(rootRect.viewer, 'video', Qt.binding(function(){
+                      return !root.isFullscreen ?'#000_MULTISCREEN':'#000_FULLSCREEN';}));
+                  root.safeSetProperty(rootRect.viewer, 'isFullscreen', Qt.binding(function(){
+                    return root.isFullscreen;
                   }));
-                if(root.isRealtime === false) {
+                  if ( rootRect.viewer.tab_id !== undefined )
+                    rootRect.viewer.tab_id = root.tab_id;
+                  idLog.debug('<IVViewer.qml>onBindings, fromRealtime=' + root.fromRealtime);
+                  root.safeSetProperty(rootRect.viewer, 'fromRealtime',Qt.binding(function(){ return root.fromRealtime}));
+                  root.safeSetProperty(rootRect.viewer, 'isRealtime', Qt.binding(function(){
+                    return root.isRealtime;
+                    }));
                   if(root.ivArchiveTime !== null) {
                     idLog.error('<IVViewer.qml>' + ' onBindings root.key2 ' + root.key2 +
                       ' root.ivArchiveTime ' + root.ivArchiveTime);
@@ -691,39 +670,108 @@ onQualityChanged:
                       return root.ivArchiveCommand;
                       }));
                   }
-                }
-                if (root.text_primit !== null)
-                {
-                  root.safeSetProperty(rootRect.viewer, 'text_primit', Qt.binding(function(){
-                  return root.text_primit;
-                }));
-                }
-                if(root.ivLogin !== null) {
-                  root.safeSetProperty(rootRect.viewer, 'login', root.ivLogin);
-                }
-                if(root.ivPassword !== null) {
-                  root.safeSetProperty(rootRect.viewer, 'password', root.ivPassword);
-                }
-                root.safeSetProperty(rootRect.viewer, 'running', Qt.binding(function(){
-                  return root.running;
-                }));
-                root.safeSetProperty(rootRect.viewer, 'isParentCreationInterrupted', Qt.binding(function() {
-                  return root.isCreationInterrupted;
-                }));
+                  root.safeSetProperty(rootRect.viewer, 'running', Qt.binding(function(){
+                    return root.running;
+                  }));
+                  root.safeSetProperty(rootRect.viewer, 'viewer_command_obj', Qt.binding(function() {
+                    return viewer_command_obj;
+                  }));
+                  root.safeSetProperty(rootRect.viewer, 'globalComponent', Qt.binding(function() {
+                    return root.globalComponent;
+                  }));
+                  root.safeSetProperty(rootRect.viewer, 'globSignalsObject', Qt.binding(function() {
+                    return root.globSignalsObject;
+                  }));
+                  root.safeSetProperty(rootRect.viewer, 'globalSignalsObject', Qt.binding(function() {
+                    return root.globSignalsObject;
+                  }));
+                } else {
+                  //rootRect.viewer.key2 = root.key2;
+                  root.safeSetProperty(rootRect.viewer, 'key2',
+                    Qt.binding(function(){ return root.key2}));
+                  root.isPTZ = Qt.binding(function (){return rootRect.viewer.isPtzEnabled});
+                  root.safeSetProperty(rootRect.viewer, 'video', Qt.binding(function(){
+                      return !root.isFullscreen ?'#000_MULTISCREEN':'#000_FULLSCREEN';}));
+                  root.safeSetProperty(rootRect.viewer, 'compIndex', Qt.binding(function(){
+                      return root.compIndex}));
+                  root.safeSetProperty(rootRect.viewer, 'savedSetName', Qt.binding(function(){
+                    return root.savedSetName;
+                  }));
+                  root.safeSetProperty(rootRect.viewer, 'guid', Qt.binding(function(){
+                    return root.guid;
+                  }));
+                  root.safeSetProperty(rootRect.viewer, 'indexInSavedSet', Qt.binding(function(){
+                    return root.indexInSavedSet;
+                  }));
+                  root.safeSetProperty(rootRect.viewer, 'isFullscreen', Qt.binding(function(){
+                    return root.isFullscreen;
+                  }));
+                  root.safeSetProperty(rootRect.viewer, 'alert', Qt.binding(function(){
+                    return root.alert;
+                  }));
+                  root.safeSetProperty(rootRect.viewer, 'cyclic', Qt.binding(function(){
+                    return root.cyclic;
+                  }));
+                  root.safeSetProperty(rootRect.viewer, 'archive', Qt.binding(function(){
+                    return root.archive;
+                  }));
+                  root.safeSetProperty(rootRect.viewer, 'isSetsArchive', Qt.binding(function(){
+                    return root.isSetsArchive;
+                  }));
+                  if ( rootRect.viewer.tab_id !== undefined )
+                    rootRect.viewer.tab_id = root.tab_id;
+                  idLog.debug('<IVViewer.qml>onBindings, fromRealtime=' + root.fromRealtime);
+                  root.safeSetProperty(rootRect.viewer, 'fromRealtime',Qt.binding(function(){ return root.fromRealtime}));
+                  root.safeSetProperty(rootRect.viewer, 'isRealtime', Qt.binding(function(){
+                    return root.isRealtime;
+                    }));
+                  if(root.isRealtime === false) {
+                    if(root.ivArchiveTime !== null) {
+                      idLog.error('<IVViewer.qml>' + ' onBindings root.key2 ' + root.key2 +
+                        ' root.ivArchiveTime ' + root.ivArchiveTime);
+                      root.safeSetProperty(rootRect.viewer, 'time', Qt.binding(function(){
+                        return root.ivArchiveTime;
+                        }));
+                    }
+                    if(root.ivArchiveCommand !== null) {
+                      root.safeSetProperty(rootRect.viewer, 'cmd', Qt.binding(function(){
+                        return root.ivArchiveCommand;
+                        }));
+                    }
+                  }
+                  if (root.text_primit !== null)
+                  {
+                    root.safeSetProperty(rootRect.viewer, 'text_primit', Qt.binding(function(){
+                    return root.text_primit;
+                  }));
+                  }
+                  if(root.ivLogin !== null) {
+                    root.safeSetProperty(rootRect.viewer, 'login', root.ivLogin);
+                  }
+                  if(root.ivPassword !== null) {
+                    root.safeSetProperty(rootRect.viewer, 'password', root.ivPassword);
+                  }
+                  root.safeSetProperty(rootRect.viewer, 'running', Qt.binding(function(){
+                    return root.running;
+                  }));
+                  root.safeSetProperty(rootRect.viewer, 'isParentCreationInterrupted', Qt.binding(function() {
+                    return root.isCreationInterrupted;
+                  }));
 
-                root.safeSetProperty(rootRect.viewer, 'viewer_command_obj', Qt.binding(function() {
-                  return viewer_command_obj;
-                }));
+                  root.safeSetProperty(rootRect.viewer, 'viewer_command_obj', Qt.binding(function() {
+                    return viewer_command_obj;
+                  }));
 
-                root.safeSetProperty(rootRect.viewer, 'globalComponent', Qt.binding(function() {
-                  return root.globalComponent;
-                }));
-                root.safeSetProperty(rootRect.viewer, 'globSignalsObject', Qt.binding(function() {
-                  return root.globSignalsObject;
-                }));
-                root.safeSetProperty(rootRect.viewer, 'globalSignalsObject', Qt.binding(function() {
-                  return root.globSignalsObject;
-                }));
+                  root.safeSetProperty(rootRect.viewer, 'globalComponent', Qt.binding(function() {
+                    return root.globalComponent;
+                  }));
+                  root.safeSetProperty(rootRect.viewer, 'globSignalsObject', Qt.binding(function() {
+                    return root.globSignalsObject;
+                  }));
+                  root.safeSetProperty(rootRect.viewer, 'globalSignalsObject', Qt.binding(function() {
+                    return root.globSignalsObject;
+                  }));
+                }
 
                 idLog.error('<IVViewer.qml> 250530 021 ' );
                 if(root.isRealtime === false) {
