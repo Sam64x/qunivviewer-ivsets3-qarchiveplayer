@@ -1156,9 +1156,9 @@ Item {
                     margins: iv_arc_menu_new.spacing
                 }
 
-                archiveStreamer: archiveStreamer
-                iv_arc_slider_new: wndControlPanel.iv_arc_slider_new
-                imagePipeline: imagePipeline
+                archiveStreamer: root.archiveStreamer
+                iv_arc_slider_new: root.timelineItem()
+                imagePipeline: root.imagePipeline
                 m_i_curr_scale: root.m_i_curr_scale
                 needToUpdateArchive: root.needToUpdateArchive
                 archiveId: root.archiveId
