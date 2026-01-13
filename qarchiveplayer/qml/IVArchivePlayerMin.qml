@@ -36,6 +36,25 @@ Item {
     readonly property bool commonArchiveStripVisible: __registeredCommonArchiveTarget
                                                      && __registeredCommonArchiveTarget.commonArchiveStrip
                                                      && __registeredCommonArchiveTarget.commonArchiveStrip.visible
+    property bool fullUiActive: root.isFullscreen || root.activeFocus || mainMouseArea.containsMouse
+
+    function overlayItem() {
+        return overlayLoader.item;
+    }
+
+    function controlPanelItem() {
+        return overlayItem() && overlayItem().wndControlPanel ? overlayItem().wndControlPanel : null;
+    }
+
+    function archiveControlsItem() {
+        var panel = controlPanelItem();
+        return panel && panel.archiveControls ? panel.archiveControls : null;
+    }
+
+    function timelineItem() {
+        var panel = controlPanelItem();
+        return panel && panel.iv_arc_slider_new ? panel.iv_arc_slider_new : null;
+    }
 
     function registerInCommonArchive(target) {
         if (!target || !target.registerArchivePlayerMin)
@@ -59,6 +78,12 @@ Item {
             return archiveStreamer.currentTime;
     }
 
+    function getCamCommonPanelModeUseSetPanelDebValue() {
+        if (typeof root.getCamCommonPanelModeUseSetPanel_Deb === "function")
+            return root.getCamCommonPanelModeUseSetPanel_Deb();
+        return 0;
+    }
+
     onGlobalComponentChanged: {
         if (__registeredCommonArchiveTarget && __registeredCommonArchiveTarget !== globalComponent)
             unregisterFromCommonArchive();
@@ -71,7 +96,9 @@ Item {
         if (!root.exportEnabled)
             return;
         isIntervalMode = !isIntervalMode
-        iv_arc_slider_new.setInterval=isIntervalMode
+        var timeline = timelineItem();
+        if (timeline)
+            timeline.setInterval = isIntervalMode
     }
 
     function funcSwitchToFullScreen() {
@@ -198,16 +225,22 @@ Item {
         isNewStrip: true
 
         onFnJsonChanged: {
-            iv_arc_slider_new.updateFnJson();
+            var timeline = timelineItem();
+            if (timeline)
+                timeline.updateFnJson();
         }
 
         onEvJsonChanged: {
-            iv_arc_slider_new.updateEvJson();
+            var timeline = timelineItem();
+            if (timeline)
+                timeline.updateEvJson();
         }
 
         onDrawPreviewQML123: {
             if (status !== -1) {
-                iv_arc_slider_new.setPreviewSource(url)
+                var timeline = timelineItem();
+                if (timeline)
+                    timeline.setPreviewSource(url)
             }
         }
     }
@@ -260,7 +293,7 @@ Item {
             }
         }
         if (false === root.common_panel) {
-            if (0 !== root.getCamCommonPanelModeUseSetPanel_Deb())
+            if (0 !== root.getCamCommonPanelModeUseSetPanelDebValue())
                 root.m_i_c_control_panel_height = 38
         }
 
@@ -364,10 +397,17 @@ Item {
             var dt = Date.fromLocaleString(Qt.locale(), s, "dd.MM.yyyy hh:mm:ss.zzz")
             var dtPlus5 = new Date(dt.getTime() + 1500)
             _suppressTimeUpdates = true
-            archiveControls.calendarButton.calendar.chosenDate = Qt.formatDate(dt, "dd.MM.yyyy")
-            archiveControls.calendarButton.calendar.chosenTime = Qt.formatTime(dt, "hh:mm:ss")
+            var controls = archiveControlsItem();
+            var timeline = timelineItem();
+            if (!controls || !timeline) {
+                root.archiveTime = dt
+                _suppressTimeUpdates = false
+                return
+            }
+            controls.calendarButton.calendar.chosenDate = Qt.formatDate(dt, "dd.MM.yyyy")
+            controls.calendarButton.calendar.chosenTime = Qt.formatTime(dt, "hh:mm:ss")
             root.archiveTime = dt
-            iv_arc_slider_new.currentDate = dt
+            timeline.currentDate = dt
             _suppressTimeUpdates = false
         }
     }
@@ -391,17 +431,20 @@ Item {
     property int m_i_curr_scale: validateSettings(stripScale.value) !== null ? validateSettings(stripScale.value) : 4
 
     onM_i_curr_scaleChanged: {
-        if (iv_arc_slider_new) {
-            iv_arc_slider_new.setScale(root.m_i_curr_scale)
-        }
+        var timeline = timelineItem();
+        if (timeline)
+            timeline.setScale(root.m_i_curr_scale)
     }
 
     function updateTimeFromCalendar() {
         if (_suppressTimeUpdates) return
-        var chosenDateTime = archiveControls.calendarButton.calendar.chosenDate + " " + archiveControls.calendarButton.calendar.chosenTime
+        var controls = archiveControlsItem();
+        var timeline = timelineItem();
+        if (!controls || !timeline) return
+        var chosenDateTime = controls.calendarButton.calendar.chosenDate + " " + controls.calendarButton.calendar.chosenTime
         var time = Date.fromLocaleString(Qt.locale(), chosenDateTime, "dd.MM.yyyy hh:mm:ss")
         _suppressTimeUpdates = true
-        iv_arc_slider_new.currentDate = time
+        timeline.currentDate = time
         root.archiveTime = time
         _suppressTimeUpdates = false
 
@@ -415,10 +458,13 @@ Item {
 
     function updateTimeFromSlider() {
         if (_suppressTimeUpdates) return
-        var time = iv_arc_slider_new.currentDate
+        var controls = archiveControlsItem();
+        var timeline = timelineItem();
+        if (!controls || !timeline) return
+        var time = timeline.currentDate
         _suppressTimeUpdates = true
-        archiveControls.calendarButton.calendar.chosenDate = Qt.formatDate(time, "dd.MM.yyyy")
-        archiveControls.calendarButton.calendar.chosenTime = Qt.formatTime(time, "hh:mm:ss")
+        controls.calendarButton.calendar.chosenDate = Qt.formatDate(time, "dd.MM.yyyy")
+        controls.calendarButton.calendar.chosenTime = Qt.formatTime(time, "hh:mm:ss")
         root.archiveTime = time
         _suppressTimeUpdates = false
 
@@ -925,249 +971,318 @@ Item {
         }
 
 
-        IVButtonTopPanel {
-            id: ivButtonTopPanel
-            anchors.top: parent.top
-            mouseOnPane: mainMouseArea.containsMouse
-            parentComponent: root
+        Loader {
+            id: overlayLoader
+            anchors.fill: parent
+            sourceComponent: root.fullUiActive ? fullOverlayComponent : thinOverlayComponent
         }
 
-        Item {
-            id: wndControlPanel
-            z: 5
-            anchors.fill: parent
-            visible: !root.commonArchiveStripVisible
-            opacity: ((0 === root.getCamCommonPanelModeUseSetPanel_Deb() && !root.isSmallMode()) || mainMouseArea.containsMouse || root.common_panel) ? 1.0 : 0.0
+        Component {
+            id: thinOverlayComponent
 
-            ColumnLayout {
-                id: cameraInfoBlock
+            Item { }
+        }
 
-                readonly property bool isTopRight: (archiveControls.settingButtons.posAlignment & (Qt.AlignTop | Qt.AlignRight)) === (Qt.AlignTop | Qt.AlignRight)
+        Component {
+            id: fullOverlayComponent
 
-                z: mainMouseArea.z + 1
+            Item {
+                id: fullOverlay
+                property alias wndControlPanel: wndControlPanel
 
-                anchors.fill: parent
-                anchors.margins: 2
-                anchors.bottomMargin: wndControlPanel.visible ? iv_arc_slider_new.height : 0
-                anchors.topMargin: (_archiveMarker.visible && isTopRight) ? 24 : 0
+                IVButtonTopPanel {
+                    id: ivButtonTopPanel
+                    anchors.top: parent.top
+                    mouseOnPane: mainMouseArea.containsMouse
+                    parentComponent: root
+                }
 
-                ColumnLayout {
-                    Layout.alignment: archiveControls.settingButtons.posAlignment
-                    spacing: 0
+                Item {
+                    id: wndControlPanel
+                    z: 5
+                    anchors.fill: parent
+                    visible: !root.commonArchiveStripVisible
+                    opacity: ((0 === root.getCamCommonPanelModeUseSetPanelDebValue() && !root.isSmallMode())
+                              || mainMouseArea.containsMouse || root.common_panel) ? 1.0 : 0.0
 
-                    Label {
-                        text: root.cameraId
-                        Layout.alignment: archiveControls.settingButtons.posAlignment
-                        font: IVColors.getFont("Label accent")
-                        color: IVColors.get("Colors/Text new/TxContrast")
-                        leftPadding: 4
-                        rightPadding: 4
-                        background: Rectangle {
-                            visible: parent.text.length > 0
-                            color: IVColors.get("Colors/Background new/BgFormOverVideo")
-                        }
-                    }
+                    property var archiveControls: archiveControlsLoader.item
+                    property var iv_arc_slider_new: timelineLoader.item
 
-                    RowLayout {
-                        spacing: 0
-                        Layout.alignment: archiveControls.settingButtons.posAlignment
+                    readonly property int controlsAlignment: archiveControls
+                                                         ? archiveControls.settingButtons.posAlignment
+                                                         : (Qt.AlignTop | Qt.AlignLeft)
 
-                        Label {
-                            text: archiveStreamer.currentDate || ""
-                            Layout.alignment: archiveControls.settingButtons.posAlignment
-                            font: IVColors.getFont("Label accent")
-                            leftPadding: 4
-                            rightPadding: 4
-                            color: IVColors.get("Colors/Text new/TxContrast")
-                            background: Rectangle {
-                                visible: parent.text.length > 0
-                                color: IVColors.get("Colors/Background new/BgFormOverVideo")
+                    ColumnLayout {
+                        id: cameraInfoBlock
+
+                        readonly property bool isTopRight: (controlsAlignment & (Qt.AlignTop | Qt.AlignRight)) === (Qt.AlignTop | Qt.AlignRight)
+
+                        z: mainMouseArea.z + 1
+
+                        anchors.fill: parent
+                        anchors.margins: 2
+                        anchors.bottomMargin: wndControlPanel.visible
+                                              ? (iv_arc_slider_new ? iv_arc_slider_new.height : 0)
+                                              : 0
+                        anchors.topMargin: (_archiveMarker.visible && isTopRight) ? 24 : 0
+
+                        ColumnLayout {
+                            Layout.alignment: controlsAlignment
+                            spacing: 0
+
+                            Label {
+                                text: root.cameraId
+                                Layout.alignment: controlsAlignment
+                                font: IVColors.getFont("Label accent")
+                                color: IVColors.get("Colors/Text new/TxContrast")
+                                leftPadding: 4
+                                rightPadding: 4
+                                background: Rectangle {
+                                    visible: parent.text.length > 0
+                                    color: IVColors.get("Colors/Background new/BgFormOverVideo")
+                                }
+                            }
+
+                            RowLayout {
+                                spacing: 0
+                                Layout.alignment: controlsAlignment
+
+                                Label {
+                                    text: archiveStreamer.currentDate || ""
+                                    Layout.alignment: controlsAlignment
+                                    font: IVColors.getFont("Label accent")
+                                    leftPadding: 4
+                                    rightPadding: 4
+                                    color: IVColors.get("Colors/Text new/TxContrast")
+                                    background: Rectangle {
+                                        visible: parent.text.length > 0
+                                        color: IVColors.get("Colors/Background new/BgFormOverVideo")
+                                    }
+                                }
+                                Label {
+                                    text: archiveStreamer.currentTime || ""
+                                    Layout.alignment: controlsAlignment
+                                    font: IVColors.getFont("Label accent")
+                                    leftPadding: 4
+                                    rightPadding: 4
+                                    color: IVColors.get("Colors/Text new/TxContrast")
+                                    background: Rectangle {
+                                        visible: parent.text.length > 0
+                                        color: IVColors.get("Colors/Background new/BgFormOverVideo")
+                                    }
+                                }
+                            }
+
+                            RowLayout {
+                                spacing: 0
+                                Layout.alignment: controlsAlignment
+
+                                Label {
+                                    text: archiveStreamer.cameraResolution || ""
+                                    Layout.alignment: controlsAlignment
+                                    font: IVColors.getFont("Label accent")
+                                    leftPadding: 4
+                                    rightPadding: 4
+                                    color: IVColors.get("Colors/Text new/TxContrast")
+                                    background: Rectangle {
+                                        visible: parent.text.length > 0
+                                        color: IVColors.get("Colors/Background new/BgFormOverVideo")
+                                    }
+                                }
+                                Label {
+                                    text: archiveStreamer.cameraResolution
+                                          ? Math.round(Number(archiveStreamer.currentFPS)) + " к/c"
+                                          : ""
+                                    Layout.alignment: controlsAlignment
+                                    font: IVColors.getFont("Label accent")
+                                    leftPadding: 4
+                                    rightPadding: 4
+                                    color: IVColors.get("Colors/Text new/TxContrast")
+                                    background: Rectangle {
+                                        visible: parent.text.length > 0
+                                        color: IVColors.get("Colors/Background new/BgFormOverVideo")
+                                    }
+                                }
                             }
                         }
-                        Label {
-                            text: archiveStreamer.currentTime || ""
-                            Layout.alignment: archiveControls.settingButtons.posAlignment
-                            font: IVColors.getFont("Label accent")
-                            leftPadding: 4
-                            rightPadding: 4
-                            color: IVColors.get("Colors/Text new/TxContrast")
-                            background: Rectangle {
-                                visible: parent.text.length > 0
-                                color: IVColors.get("Colors/Background new/BgFormOverVideo")
-                            }
+                    }
+
+                    Rectangle {
+                        id: iv_arc_menu_new
+
+                        property real spacing: 4 * root.isize
+                        z: cameraInfoBlock.z + 1
+                        width: archiveControls ? archiveControls.width + 2 * spacing : 0
+                        height: 32 * root.isize
+                        visible: archiveControls && root.width > archiveControls.implicitWidth
+
+                        anchors {
+                            bottom: iv_arc_slider_new ? iv_arc_slider_new.top : parent.bottom
+                            bottomMargin: 8 * root.isize
+                            horizontalCenter: parent.horizontalCenter
+                        }
+
+                        color: IVColors.get("Colors/Background new/BgFormOverVideo")
+                        radius: 8*root.isize
+
+                        Loader {
+                            id: archiveControlsLoader
+                            active: root.fullUiActive
+                            visible: active
+                            anchors.fill: parent
+                            sourceComponent: archiveControlsComponent
                         }
                     }
 
-                    RowLayout {
-                        spacing: 0
-                        Layout.alignment: archiveControls.settingButtons.posAlignment
+                    Loader {
+                        id: timelineLoader
+                        active: root.fullUiActive
+                        visible: active
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        sourceComponent: timelineComponent
+                    }
+                }
 
-                        Label {
-                            text: archiveStreamer.cameraResolution || ""
-                            Layout.alignment: archiveControls.settingButtons.posAlignment
-                            font: IVColors.getFont("Label accent")
-                            leftPadding: 4
-                            rightPadding: 4
-                            color: IVColors.get("Colors/Text new/TxContrast")
-                            background: Rectangle {
-                                visible: parent.text.length > 0
-                                color: IVColors.get("Colors/Background new/BgFormOverVideo")
-                            }
+                Component {
+                    id: archiveControlsComponent
+
+                    ArchiveControls {
+                        id: archiveControls
+
+                        z: mainMouseArea.z + 2
+                        height: iv_arc_menu_new.height - iv_arc_menu_new.spacing * 2
+                        spacing: iv_arc_menu_new.spacing
+
+                        anchors {
+                            centerIn: parent
+                            margins: iv_arc_menu_new.spacing
                         }
-                        Label {
-                            text: archiveStreamer.cameraResolution ? Math.round(Number(archiveStreamer.currentFPS)) + " к/c" : ""
-                            Layout.alignment: archiveControls.settingButtons.posAlignment
-                            font: IVColors.getFont("Label accent")
-                            leftPadding: 4
-                            rightPadding: 4
-                            color: IVColors.get("Colors/Text new/TxContrast")
-                            background: Rectangle {
-                                visible: parent.text.length > 0
-                                color: IVColors.get("Colors/Background new/BgFormOverVideo")
-                            }
+
+                        archiveStreamer: archiveStreamer
+                        iv_arc_slider_new: wndControlPanel.iv_arc_slider_new
+                        imagePipeline: imagePipeline
+                        m_i_curr_scale: root.m_i_curr_scale
+                        needToUpdateArchive: root.needToUpdateArchive
+                        archiveId: root.archiveId
+                        rootRef: root
+                        cameraId: root.cameraId
+                        isIntervalMode: root.isIntervalMode
+                        archiveTime: root.archiveTime
+                        updateTimeFromSlider: root.updateTimeFromSlider
+                        updateTimeFromCalendar: root.updateTimeFromCalendar
+                        funcSwitchSelectIntervalMode: root.funcSwitchSelectIntervalMode
+
+                        onScaleChosen: {
+                            root.m_i_curr_scale = index
                         }
-                    }
-                }
-            }
-
-            Rectangle {
-                id: iv_arc_menu_new
-
-                property real spacing: 4 * root.isize
-                z: cameraInfoBlock.z + 1
-                width: archiveControls.width + 2 * spacing
-                height: 32 * root.isize
-                visible: root.width > archiveControls.implicitWidth
-
-                anchors {
-                    bottom: iv_arc_slider_new.top
-                    bottomMargin: 8 * root.isize
-                    horizontalCenter: parent.horizontalCenter
-                }
-
-                color: IVColors.get("Colors/Background new/BgFormOverVideo")
-                radius: 8*root.isize
-
-                ArchiveControls {
-                    id: archiveControls
-
-                    z: mainMouseArea.z + 2
-                    height: parent.height - parent.spacing*2
-                    spacing: parent.spacing
-
-                    anchors {
-                        centerIn: parent
-                        margins: parent.spacing
-                    }
-
-                    archiveStreamer: archiveStreamer
-                    iv_arc_slider_new: iv_arc_slider_new
-                    imagePipeline: imagePipeline
-                    m_i_curr_scale: root.m_i_curr_scale
-                    needToUpdateArchive: root.needToUpdateArchive
-                    archiveId: root.archiveId
-                    rootRef: root
-                    cameraId: root.cameraId
-                    isIntervalMode: root.isIntervalMode
-                    archiveTime: root.archiveTime
-                    updateTimeFromSlider: root.updateTimeFromSlider
-                    updateTimeFromCalendar: root.updateTimeFromCalendar
-                    funcSwitchSelectIntervalMode: root.funcSwitchSelectIntervalMode
-
-                    onScaleChosen: {
-                        root.m_i_curr_scale = index
-                    }
-                    onClearPendingUpdate: {
-                        root.needToUpdateArchive = false
-                    }
-                }
-            }
-
-            IVArc_slider_new2 {
-                id: iv_arc_slider_new
-
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-
-                visible: root.width > 622
-
-                isize: root.isize
-                height: 40 * (root.isize)
-                archivePlayer: idarchive_player
-                key2: root.key2
-                previewMargin: iv_arc_menu_new.height
-                isMultiscreen: root.is_multiscreen
-                isCommonPanel: root.isCommonPanel
-                showEvents: [-1,2].indexOf(archiveControls.iv_butt_spb_events_skip.type) > -1
-                showBookmarks: [-1,6].indexOf(archiveControls.iv_butt_spb_events_skip.type) > -1
-                intervalBeforeIndex: root.exportIntervalBeforeIndex
-                intervalAfterIndex: root.exportIntervalAfterIndex
-                currentScale: root.m_i_curr_scale
-
-                onScaleRequested: root.m_i_curr_scale = scale
-                onIntervalIndicesRequested: {
-                    root.exportIntervalBeforeIndex = beforeIndex
-                    root.exportIntervalAfterIndex = afterIndex
-                }
-
-                Timer {
-                    id: onTimer
-
-                    property int loops: 0
-
-                    interval: 25
-                    repeat: true
-
-                    onTriggered: {
-                        loops++
-                        if (root.getFrameTime() > 0 || loops >= 50) { stop() }
-                    }
-
-                    onRunningChanged: {
-                        if(!running){
-                            var fTime = root.getFrameTime()
-                            if (fTime > 10) iv_arc_slider_new.currentDate = new Date(fTime)
-                            else {
-                                var dateTime = archiveControls.calendarButton.calendar.chosenDate + " " + archiveControls.calendarButton.calendar.chosenTime
-                                var parts = dateTime.split(/[. :]/)
-                                var dateObject = new Date(parts[2], parts[1] - 1, parts[0], parts[3], parts[4], parts[5])
-                                iv_arc_slider_new.currentDate = dateObject
-                            }
-                            if (root.m_uu_i_ms_begin_interval < 1 && root.m_uu_i_ms_end_interval < 1) root.funcReset_selection()
-                            iv_arc_slider_new.refreshModel()
+                        onClearPendingUpdate: {
+                            root.needToUpdateArchive = false
                         }
                     }
                 }
 
-                Component.onCompleted: {
-                    iv_arc_slider_new.ready = false
-                    iv_arc_slider_new.setScale(m_i_curr_scale)
-                    onTimer.start()
-                }
+                Component {
+                    id: timelineComponent
 
-                onTimeline_modelChanged:{
-                    root.m_i_curr_scale = iv_arc_slider_new.timeline_model
-                }
+                    IVArc_slider_new2 {
+                        id: iv_arc_slider_new
 
-                onUpdateCalendarDT: {
-                    updateTimeFromSlider()
-                }
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
 
-                onDoubleClicked: {
-                    root.funcSwitchSelectIntervalMode()
-                }
+                        visible: root.width > 622
 
-                onCurrentDateChanged: {
-                    idarchive_player.currentDate = iv_arc_slider_new.currentDate
-                }
+                        isize: root.isize
+                        height: 40 * (root.isize)
+                        archivePlayer: idarchive_player
+                        key2: root.key2
+                        previewMargin: iv_arc_menu_new.height
+                        isMultiscreen: root.is_multiscreen
+                        isCommonPanel: root.isCommonPanel
+                        showEvents: wndControlPanel.archiveControls
+                                    && [-1,2].indexOf(wndControlPanel.archiveControls.iv_butt_spb_events_skip.type) > -1
+                        showBookmarks: wndControlPanel.archiveControls
+                                       && [-1,6].indexOf(wndControlPanel.archiveControls.iv_butt_spb_events_skip.type) > -1
+                        intervalBeforeIndex: root.exportIntervalBeforeIndex
+                        intervalAfterIndex: root.exportIntervalAfterIndex
+                        currentScale: root.m_i_curr_scale
 
-                onBoundsChanged: {
-                    var bounds = iv_arc_slider_new.getSelectedInterval()
-                    var left = bounds.left - bounds.left%1000
-                    var right = bounds.right - bounds.right%1000
-                    if (left !== root.m_uu_i_ms_begin_interval) root.m_uu_i_ms_begin_interval = left
-                    if (right !== root.m_uu_i_ms_end_interval) root.m_uu_i_ms_end_interval = right
+                        onScaleRequested: root.m_i_curr_scale = scale
+                        onIntervalIndicesRequested: {
+                            root.exportIntervalBeforeIndex = beforeIndex
+                            root.exportIntervalAfterIndex = afterIndex
+                        }
+
+                        Timer {
+                            id: onTimer
+
+                            property int loops: 0
+
+                            interval: 25
+                            repeat: true
+
+                            onTriggered: {
+                                loops++
+                                if (root.getFrameTime() > 0 || loops >= 50) { stop() }
+                            }
+
+                            onRunningChanged: {
+                                if(!running){
+                                    var fTime = root.getFrameTime()
+                                    if (fTime > 10) iv_arc_slider_new.currentDate = new Date(fTime)
+                                    else {
+                                        var dateTime = wndControlPanel.archiveControls
+                                                       ? wndControlPanel.archiveControls.calendarButton.calendar.chosenDate
+                                                         + " " + wndControlPanel.archiveControls.calendarButton.calendar.chosenTime
+                                                       : ""
+                                        if (dateTime !== "") {
+                                            var parts = dateTime.split(/[. :]/)
+                                            var dateObject = new Date(parts[2], parts[1] - 1, parts[0],
+                                                                      parts[3], parts[4], parts[5])
+                                            iv_arc_slider_new.currentDate = dateObject
+                                        }
+                                    }
+                                    if (root.m_uu_i_ms_begin_interval < 1 && root.m_uu_i_ms_end_interval < 1) {
+                                        root.funcReset_selection()
+                                    }
+                                    iv_arc_slider_new.refreshModel()
+                                }
+                            }
+                        }
+
+                        Component.onCompleted: {
+                            iv_arc_slider_new.ready = false
+                            iv_arc_slider_new.setScale(m_i_curr_scale)
+                            onTimer.start()
+                        }
+
+                        onTimeline_modelChanged:{
+                            root.m_i_curr_scale = iv_arc_slider_new.timeline_model
+                        }
+
+                        onUpdateCalendarDT: {
+                            updateTimeFromSlider()
+                        }
+
+                        onDoubleClicked: {
+                            root.funcSwitchSelectIntervalMode()
+                        }
+
+                        onCurrentDateChanged: {
+                            idarchive_player.currentDate = iv_arc_slider_new.currentDate
+                        }
+
+                        onBoundsChanged: {
+                            var bounds = iv_arc_slider_new.getSelectedInterval()
+                            var left = bounds.left - bounds.left%1000
+                            var right = bounds.right - bounds.right%1000
+                            if (left !== root.m_uu_i_ms_begin_interval) root.m_uu_i_ms_begin_interval = left
+                            if (right !== root.m_uu_i_ms_end_interval) root.m_uu_i_ms_end_interval = right
+                        }
+                    }
                 }
             }
         }
@@ -1193,11 +1308,10 @@ Item {
         }
     }
     function isSmallMode() {
-        var b_lv = false
-
-        b_lv = (wndControlPanel.width < root.smallSizePanel)
-
-        return b_lv
+        var panel = controlPanelItem()
+        if (!panel)
+            return true
+        return panel.width < root.smallSizePanel
     }
 
     function correctIntervalSelectLeft_ByCommand2(time) {
@@ -1236,7 +1350,8 @@ Item {
         idLog3.warn('<common_pan> 200712 31 ')
 
         var i_height_lv = root.height
-        var i_height_contr_panel_lv = wndControlPanel.height
+        var panel = controlPanelItem()
+        var i_height_contr_panel_lv = panel ? panel.height : 0
 
         root.visible = (0 !== i_val_av)
 
@@ -1251,15 +1366,19 @@ Item {
 
      function updateTime811() {
          idLog3.warn('updateTime811 begin ')
-         var s_date_lv = calendarButton.calendar.chosenDate
+         var controls = archiveControlsItem()
+         var timeline = timelineItem()
+         if (!controls || !timeline)
+             return
+         var s_date_lv = controls.calendarButton.calendar.chosenDate
 
-         idLog3.warn('<calendar> updateTime811 calendarButton.calendar.chosenDate ' + calendarButton.calendar.chosenDate
-                     + ' calendarButton.calendar.chosenTime ' + calendarButton.calendar.chosenTime
+         idLog3.warn('<calendar> updateTime811 calendarButton.calendar.chosenDate ' + controls.calendarButton.calendar.chosenDate
+                     + ' calendarButton.calendar.chosenTime ' + controls.calendarButton.calendar.chosenTime
                      + ' s_date_lv ' + s_date_lv
                      + ' input_time_outside_cahange ' + root.b_input_time_outside_cahange)
 
-         idLog3.warn('calendarButton.calendar.chosenDate ' + calendarButton.calendar.chosenDate
-                     + ' calendarButton.calendar.chosenTime ' + calendarButton.calendar.chosenTime
+         idLog3.warn('calendarButton.calendar.chosenDate ' + controls.calendarButton.calendar.chosenDate
+                     + ' calendarButton.calendar.chosenTime ' + controls.calendarButton.calendar.chosenTime
                      + ' s_date_lv ' + s_date_lv)
 
          idLog3.warn('updateTime811 root.time811' + root.time811
@@ -1270,8 +1389,8 @@ Item {
              idLog3.warn('updateTime811 root.time811 301')
              if (!root.b_input_time_outside_cahange)
              {
-                 if (!iv_arc_slider_new.sliderIsDragged)
-                     iv_arc_slider_new.currentDate = new Date(root.time811)
+                 if (!timeline.sliderIsDragged)
+                     timeline.currentDate = new Date(root.time811)
              }
          }
          idLog3.warn('updateTime811 root.time811 4')
@@ -1365,7 +1484,7 @@ Item {
 
         idLog3.warn('<root> complete2 getCamCommonPanelModeUseSetPanel ' + b_cond_lv)
 
-        if (0 === root.getCamCommonPanelModeUseSetPanel_Deb())
+        if (0 === root.getCamCommonPanelModeUseSetPanelDebValue())
         {
             b_cond_lv = root.isSmallMode()
             idLog3.warn('<root> complete2 b_cond_lv ' + b_cond_lv)
@@ -1485,12 +1604,15 @@ Item {
     }
 
     function funcReset_selection() {
-        if (iv_arc_slider_new.setInterval){
-            iv_arc_slider_new.setInterval = false
-            iv_arc_slider_new.setInterval = true
+        var timeline = timelineItem()
+        if (!timeline)
+            return
+        if (timeline.setInterval) {
+            timeline.setInterval = false
+            timeline.setInterval = true
         }
-        root.m_uu_i_ms_begin_interval = iv_arc_slider_new.currentDate.getTime()
-        root.m_uu_i_ms_end_interval = iv_arc_slider_new.currentDate.getTime()
+        root.m_uu_i_ms_begin_interval = timeline.currentDate.getTime()
+        root.m_uu_i_ms_end_interval = timeline.currentDate.getTime()
     }
 
     function validateSettings(value){
